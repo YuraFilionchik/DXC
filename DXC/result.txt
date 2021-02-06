@@ -1,0 +1,85 @@
+
+DXC30  Supervisory Port On Line . Type 'H' for help
+
+GR_DXC>
+system detect and been automatically configed to [ANSI].
+GR_DXC>dsp alm
+
+NAME =     GR_DXC         NODE = 0
+
+(041)IO- 1:8     BPV ERROR                           	 EVENT    16:36:43 20/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     OFF      18:12:15 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     MAJOR    18:12:04 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     OFF      06:16:57 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     MAJOR    06:16:46 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     OFF      05:53:03 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     MAJOR    05:52:53 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     OFF      05:42:56 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     MAJOR    05:42:45 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     OFF      05:32:48 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     MAJOR    05:32:37 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     OFF      05:21:48 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     MAJOR    05:21:37 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     OFF      04:51:03 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     MAJOR    04:50:53 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     OFF      04:43:22 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     MAJOR    04:43:12 17/02/17
+(039)IO- 7:5     REMOTE SYNC LOSS                     OFF      04:28:42 17/02/17
+
+Hit Space-Bar to continue...
+(039)IO- 7:5     REMOTE SYNC LOSS                     MAJOR    04:28:31 17/02/17
+(033)IO- 3:8     AIS SYNC LOSS                        OFF      10:05:17 11/02/17
+(031)IO- 3:8     AIS OCCURRED                         OFF      10:05:17 11/02/17
+(033)IO- 3:8     AIS SYNC LOSS                        MAJOR    10:05:16 11/02/17
+(031)IO- 3:8     AIS OCCURRED                         MAJOR    10:05:16 11/02/17
+(035)IO- 3:8     LOCAL SYNC LOSS                      OFF      09:12:49 11/02/17
+(035)IO- 3:8     LOCAL SYNC LOSS                      MAJOR    09:12:49 11/02/17
+(033)IO- 3:8     AIS SYNC LOSS                        OFF      09:12:49 11/02/17
+(031)IO- 3:8     AIS OCCURRED                         OFF      09:12:49 11/02/17
+(033)IO- 3:8     AIS SYNC LOSS                        MAJOR    09:12:48 11/02/17
+(031)IO- 3:8     AIS OCCURRED                         MAJOR    09:12:48 11/02/17
+(031)IO- 3:8     AIS OCCURRED                         OFF      23:55:40 10/02/17
+(033)IO- 3:8     AIS SYNC LOSS                        OFF      23:55:40 10/02/17
+(031)IO- 3:8     AIS OCCURRED                         MAJOR    23:55:40 10/02/17
+(035)IO- 3:8     LOCAL SYNC LOSS                      OFF      23:55:39 10/02/17
+(033)IO- 3:8     AIS SYNC LOSS                        MAJOR    23:55:39 10/02/17
+(035)IO- 3:8     LOCAL SYNC LOSS                      MAJOR    23:55:39 10/02/17
+(033)IO- 3:8     AIS SYNC LOSS                        OFF      19:14:28 10/02/17
+(031)IO- 3:8     AIS OCCURRED                         OFF      19:14:28 10/02/17
+(033)IO- 3:8     AIS SYNC LOSS                        MAJOR    19:14:27 10/02/17
+(031)IO- 3:8     AIS OCCURRED                         MAJOR    19:14:27 10/02/17
+(033)IO- 3:8     AIS SYNC LOSS                        OFF      06:16:28 10/02/17
+
+Hit Space-Bar to continue...
+
+Hit Space-Bar to continue...
+GR_DXC>def sys
+
+CLOCK_MASTER  CLOCK_FBACK  REDUNDANCY  STATION_CLOCK  MATRIX_MODE  DATE_FORMAT
+STATION       RX_CLOCK     YES         2.048 MHZ      BIDIRECT     DD/MM/YYYY
+GR_DXC>dsp st sys
+
+NODE              = 0    NAME =   GR_DXC          PRODUCT = DXC30
+MAJOR ALARM STATE = ON   MINOR ALARM STATE = OFF  ALARM RELAY STATE = ON
+NODAL CLOCK       = STATION        ONLINE DCL  = CL-A
+INVERTED ALARMS   =  NO           ACTIVE DATABASE NUMBER  = 1
+
+INSTALLED MODULES :
+SLOT : PS-A          PS-B          CL-A          CL-B
+HW   :   PS (ON)       PS (ON)     DCL3          DCL3
+
+I/O  : 1             2             3             4             5
+DB   : D8E1          ----------    D8E1          ----------    D8E1
+HW   : D8E1          -RESERVED-    D8E1          ----------    D8E1
+
+I/O  : 6             7             8             9             10
+DB   : ----------    D8E1          ----------    D8E1          ----------
+HW   : ----------    D8E1          ----------    D8E1          ----------
+
+I/O  : 11            12            13            14            15
+DB   : D8E1          ----------    ----------    ----------    ----------
+HW   : D8E1          -RESERVED-    -RESERVED-    -RESERVED-    -RESERVED-
+
+
+TIME: 16:44:37   DATE: 20/02/2017
+GR_DXC>

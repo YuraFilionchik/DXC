@@ -1,0 +1,24 @@
+
+
+SYSTEM CONFIGURATION COMMANDS
+
+DEF  PORT [SS:PP][SS:IPP]     DEF   SP
+DEF  SYS                      DEF   NAME
+TIME                          DATE
+F - Terminal Functions        DEF   PWD
+DEF  TERM [VT100][TV920][VT52][FREEDOM100][FREEDOM220]
+INIT F    [VT100][TV920][VT52][FREEDOM100][FREEDOM220]
+INIT DB                       LOAD  DB [FILE-NUMBER]
+UPD  DB [FILE-NUMBER]         DEF   DCL FLIP
+DEF  NP                       DEF   CALL
+DEF  AGENT                    DEF   BERT SS:PP
+DEF  ALM ATTRIB               DEF   TEST PORT SS:PP
+LOAD HW                       DEF   TS SS:PP:TT
+INIT AP                       DEF   AP ALL
+
+DEF  AR                       DEF   AP ALM
+DEF  RDN SS [SS]              DEF   PROMPT
+DEF  MANAGER LIST             FORCE ONLINE SS[:PP]
+DEF  AT                       DEF   AW
+LOAD OFFLINE DB               CLR FORCE SS:PP
+
