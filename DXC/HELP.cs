@@ -10,6 +10,7 @@ using System;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace DXC
 {
@@ -19,6 +20,8 @@ namespace DXC
 	public  class HELP
 	{
 		public ListBox LB1;
+        public static string AlarmFileMajor = "";
+        public static string AlarmFileMinor = "";
 		public HELP()
 		{
 			
@@ -30,7 +33,36 @@ namespace DXC
 		//MainForm.InvokeLog("",msg);
 	        
 	   // }
-	
+       public static void BeepAlarmMajor()
+       {
+			new Thread(() =>
+            {
+System.Console.Beep();
+            }).Start();
+           
+       }
+       public static void BeepAlarmLong(int repeats)
+       {
+           new Thread(() =>
+           {
+               for (int i = 0; i < repeats; i++)
+               {
+                    System.Console.Beep(600,200);
+               }
+              
+           }).Start();
+
+       }
+        public static void BeepAlarmMinor()
+       {
+           new Thread(() =>
+           {
+               System.Console.Beep(200, 300);
+           }).Start();
+            
+       }
+
+
 	/// <summary>
 	/// объединение списка аварий в один с учетом существующих и закрытых аварий
 	/// </summary>

@@ -159,7 +159,7 @@ InitializeComponent();
                         if (dxc.alarms.Count > oldCount) //new alarms exist
                         {
                             InvokeLog("", dxc.custom_Name + " = новая авария");
-                            System.Console.Beep(300, 300);
+                            HELP.BeepAlarmMinor();
                         }
                     }
                 });
@@ -249,7 +249,7 @@ InitializeComponent();
             {
             	if(dataGridView1.Rows.Count!=0 && 
             	   dataGridView1.Rows.Count<alarms.Count)//есть новые аварии
-            		System.Console.Beep(500,200);
+            		HELP.BeepAlarmMajor();
         	dataGridView1.Rows.Clear();
             #region	Manual Add row
             foreach (Alarm alarm in alarms) {
@@ -645,7 +645,7 @@ InitializeComponent();
         
 		void Button4Click(object sender, EventArgs e)
 		{
-			CurrentDXC.UpdateDB("2");
+			HELP.BeepAlarmLong(3);
 		}
 		
 		//запуск окна редактирования DXC
