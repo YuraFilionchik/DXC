@@ -15,6 +15,8 @@ using System.Windows.Forms;
 using System.Net;
 using System.Text;
 using System.Drawing;
+using System.Threading;
+using ThreadState = System.Threading.ThreadState;
 
 namespace DXC
 {
@@ -42,6 +44,7 @@ namespace DXC
         }
 		public string currentIP;
 		public string backupPath;
+        public Thread UpdateAlarmsThread;
 		private string PropertiesFile = "DXC.ini";
 	    public IniFile Cfg;
 	    public ClassDXC CurrentDXC;
@@ -76,6 +79,10 @@ InitializeComponent();
            if(lbAll.Items.Count>0) lbAll.SelectedIndex=0;
             timerProgress.Tick+= new EventHandler(timerProgress_Tick);
             timer1.Tick+= new EventHandler(timer1_Tick);
+            foreach (var dxc in dxc_list)
+            {
+                dxc.DXCEvent+= new DXCEventHandler(CurrentDXC_DXCEvent);
+                }
 #endregion
             }
             catch (Exception exception)
@@ -134,19 +141,31 @@ InitializeComponent();
         	string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
-            timerProgress.Stop();
-     		  var t0=DateTime.Now;
+                timerProgress.Stop();
+                var t0=DateTime.Now;
         
-        	if(CurrentDXC==null) return;
-        	DisableButtons();
-        	CurrentDXC.ReadAlarms(2);
-        	if(!checkBox1.Checked) DisplayAlarmsDGV(CurrentDXC.alarms);
-        	else DisplayAlarmsDGV(CurrentDXC.GetCorrectedAlarms());
+                if(CurrentDXC==null) return;
+                DisableButtons();
+                CurrentDXC.ReadAlarms(2);
+                if(!checkBox1.Checked) DisplayAlarmsDGV(CurrentDXC.alarms);
+                else DisplayAlarmsDGV(CurrentDXC.GetCorrectedAlarms());
                 #region read alarms other DXC
-            foreach(var dxc in dxc_list)
-                {
-                    if (dxc == CurrentDXC) continue;
-                }
+                UpdateAlarmsThread = new Thread(() => {
+                    foreach (var dxc in dxc_list)
+                    {
+                        if (dxc == CurrentDXC) continue;
+                        int oldCount= dxc.alarms.Count;
+                        dxc.ReadAlarms(2);
+                        if (dxc.alarms.Count > oldCount) //new alarms exist
+                        {
+                            InvokeLog("", dxc.custom_Name + " = новая авария");
+                            System.Console.Beep(300, 300);
+                        }
+                    }
+                });
+                    
+                UpdateAlarmsThread.Start();
+            
                 #endregion
                 EnableButtons();
         	TimeSpan dt=DateTime.Now-t0;
@@ -158,7 +177,7 @@ InitializeComponent();
 //        	Log.WriteLog(methodName,"timer1.interval = "+timer1.Interval.ToString());
         	#endregion
         	timerProgress.Start();
-        	//TODO monitoring all dxc`s
+        	
 
             }
             catch (Exception exception)
@@ -192,11 +211,11 @@ InitializeComponent();
             try
             {
 			if(lbAll.SelectedItems.Count!=1)return;
-        	if(CurrentDXC!=(null)) CurrentDXC.DXCEvent-= new DXCEventHandler(CurrentDXC_DXCEvent);//отписка от старого dxc
+        	//if(CurrentDXC!=(null)) CurrentDXC.DXCEvent-= new DXCEventHandler(CurrentDXC_DXCEvent);//отписка от старого dxc
         	CurrentDXC=dxc_list.Find(x=>x.custom_Name==lbAll.SelectedItem.ToString());
         	ClearLog();
         	CurrentDXC.ReadInfoFromIP();
-        	CurrentDXC.DXCEvent+= new DXCEventHandler(CurrentDXC_DXCEvent);
+        	//CurrentDXC.DXCEvent+= new DXCEventHandler(CurrentDXC_DXCEvent);
         	InvokeLog("",CurrentDXC.ToString());
         	#region test
         	//CurrentDXC.alarms=ReadAlarmsFromFile("test_ALARMS.txt");
@@ -291,6 +310,7 @@ InitializeComponent();
         	 string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
+                StopUpdateAlarmsThread();
 			SetMonitoring(false);
         	SaveSettings();
             }
@@ -677,18 +697,21 @@ InitializeComponent();
 			
 		}
 		/// <summary>
-		/// Запуск и остановка мониторинга, вкл выкл кнопок, цвет, таймеры
+		/// Запуск и остановка мониторинга, вкл выкл кнопок, цвет, таймеры, UpdateAlarmsThread
 		/// </summary>
 		/// <param name="start"></param>
 		void SetMonitoring(bool start){
 			if(start)//запуск
 			{
+              
 				button5.BackColor=MonitorButtonOnColor;				
 				button5.Text="Остановить мониторинг аварий";
 				lbProgress.Text="Ожидание опроса DXC:";
 				timer1.Start();
 				timerProgress.Enabled=true;
-			}
+
+              
+            }
 			else//остановить
 			{
 				timerProgress.Stop();
@@ -696,10 +719,24 @@ InitializeComponent();
 				lbProgress.Text="Мониторинг аварий не активен";
 				timer1.Stop();
 				button5.Text="Запуск мониторинга аварий";
-				button5.BackColor=MonitorButtonOffColor;
+				button5.BackColor=MonitorButtonOffColor; 
+                StopUpdateAlarmsThread();
 			}
 		}
-		void CheckBox1CheckedChanged(object sender, EventArgs e)
+
+        private void StopUpdateAlarmsThread()
+        {
+            try
+            {
+                if (UpdateAlarmsThread != null && UpdateAlarmsThread.ThreadState == ThreadState.Running)
+                    UpdateAlarmsThread.Abort();
+            }
+            catch (Exception e)
+            {
+            }
+        }
+
+        void CheckBox1CheckedChanged(object sender, EventArgs e)
 		{
 			if(!checkBox1.Checked) DisplayAlarmsDGV(CurrentDXC.alarms);
         	else DisplayAlarmsDGV(CurrentDXC.GetCorrectedAlarms());

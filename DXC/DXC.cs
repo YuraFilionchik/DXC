@@ -100,7 +100,7 @@ namespace DXC
             //if (BytesTotal != 0)
             {
             	//if(((int)(100*BytesTransferred)/BytesTotal)%10==0)
-            	DXCEvent(this.info.sys_name,String.Format("{0}/{1}bytes",BytesTransferred,BytesTotal));
+            	//DXCEvent(this.info.sys_name,String.Format("{0}/{1}bytes",BytesTransferred,BytesTotal));
             }
             //else
             	//DXCEvent(this.info.sys_name,".");
@@ -261,6 +261,11 @@ namespace DXC
 
         public void UpdateDB(string Number)
         {string methodName= new StackTrace(false).GetFrame(0).GetMethod().Name;
+            if(!IpPingOK(ip))
+            {
+                DXCEvent(this.custom_Name, this.ip + " адрес не доступен. Не удалось сохранить Backup!");
+                return;
+            }
         	TelnetConnection tc =new TelnetConnection(ip,23);
             try
             {
@@ -412,7 +417,8 @@ namespace DXC
             try
             {
 if(!IpPingOK(ip)) {
-        		MessageBox.Show(ip+" адрес не доступен");
+        		//MessageBox.Show(ip+" адрес не доступен");
+                DXCEvent(this.custom_Name, this.ip + " адрес не доступен");
         		return;
         	}
         	 List<Alarm> buffAlarms=new List<Alarm>();
@@ -552,7 +558,8 @@ if(!IpPingOK(ip)) {
        {
         	if(!IpPingOK(ip)) {
         		MessageBox.Show(ip+" адрес не доступен");
-        		return;
+                DXCEvent(this.custom_Name, this.ip + " адрес не доступен");
+                return;
         	}
         	try {
    
@@ -623,7 +630,12 @@ if(!IpPingOK(ip)) {
         string methodName= new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
-            	if(!IpPingOK(ip)){MessageBox.Show("Адрес "+ip+" не доступен.");return false;}
+                if (!IpPingOK(ip))
+                {
+                   // MessageBox.Show("Адрес "+ip+" не доступен.");
+                    DXCEvent(this.custom_Name, this.ip + " адрес не доступен");
+                    return false;
+                }
                 TelnetConnection tc =new TelnetConnection(ip,23);
                 string ans = tc.Read();
                 buffer=ans;
