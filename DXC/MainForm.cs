@@ -132,7 +132,9 @@ InitializeComponent();
         //обработчик событий DXC
         void CurrentDXC_DXCEvent(string DXC_Name, string msg)
         {
-        	InvokeLog(DXC_Name,msg);
+        	if(msg.Contains("Файл загружен")) HELP.BeepBackupOK();
+            else if (msg.Contains("не доступен")) HELP.BeepDenied();
+            InvokeLog(DXC_Name,msg);
         }
 
         //обновление аварий
@@ -222,6 +224,7 @@ InitializeComponent();
         	#endregion
         	//lbAlmCount.Text="Актывных аварий: "+CurrentDXC.alarms.Count(x=>x.active);
         	dataGridView1.Rows.Clear();
+            HELP.BeepClick();
         	if(!checkBox1.Checked)
         	{
         				
@@ -299,9 +302,7 @@ InitializeComponent();
         }
 		void FormShown(object sender, EventArgs e)
 		{
-			//CurrentDXC=new DXC(textBox1.Text);
-           // CurrentDXC.LoadFromFile(Cfg);
-			//InvokeLog("",CurrentDXC.ToString());
+			HELP.BeepOpen();
 		}
        
 
@@ -310,6 +311,7 @@ InitializeComponent();
         	 string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
+                HELP.BeepClose();
                 StopUpdateAlarmsThread();
 			SetMonitoring(false);
         	SaveSettings();
@@ -321,36 +323,7 @@ InitializeComponent();
         	
           
         }
-       /// <summary>
-       /// Чтение списка аварий из ранее сохраненного файла
-       /// </summary>
-       /// <param name="file"></param>
-       /// <returns></returns>
-        public List<Alarm> ReadAlarmsFromFile(string file)
-        {
-        	List<Alarm> results=new List<Alarm>();
-        	 string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
-            try
-            {
-				if(!File.Exists(file)) {MessageBox.Show("Файл "+file+" не найден"); return results; }
-        		var lines=File.ReadAllLines(file);
-        		foreach (string line in lines) {
-        			results.Add(new Alarm(false).ParseLine(line));
-        		}
-        		return results;
-            }
-            catch (Exception exception)
-            {
-                Log.WriteLog(methodName, exception.Message);
-                MessageBox.Show(exception.Message,"Reading alarms from file :"+file);
-        		return results;
-            }
-        		
-        		
-        	
-        		
-        	
-        }
+      
         
        /// <summary>
        /// Сохраняет список аварий в существующий файл с объединением или создает новый, если его не существуют
@@ -573,6 +546,7 @@ InitializeComponent();
         		if(String.IsNullOrWhiteSpace(backupPath)) 
         		{ClearLog();
         			InvokeLog("backup", "Не выбрана папка для резервной копии");
+                    HELP.BeepNotify();
         			return;
         		}
         		
@@ -645,11 +619,14 @@ InitializeComponent();
         
 		void Button4Click(object sender, EventArgs e)
 		{
-			HELP.BeepAlarmLong(3);
+			HELP.BeepAlarmMinor();
 		}
-		
-		//запуск окна редактирования DXC
-		void СписокDXCToolStripMenuItemClick(object sender, EventArgs e)
+        void Button6Click(object sender, EventArgs e)
+        {
+            HELP.BeepAlarmMajor();
+        }
+        //запуск окна редактирования DXC
+        void СписокDXCToolStripMenuItemClick(object sender, EventArgs e)
 		{
 			EditDXC editForm=new EditDXC(dxc_list);
 			DialogResult dr=editForm.ShowDialog();
@@ -703,7 +680,7 @@ InitializeComponent();
 		void SetMonitoring(bool start){
 			if(start)//запуск
 			{
-              
+              HELP.BeepRun();
 				button5.BackColor=MonitorButtonOnColor;				
 				button5.Text="Остановить мониторинг аварий";
 				lbProgress.Text="Ожидание опроса DXC:";
@@ -714,6 +691,7 @@ InitializeComponent();
             }
 			else//остановить
 			{
+                HELP.BeepStop();
 				timerProgress.Stop();
 				ProgressBar1.Value=0;
 				lbProgress.Text="Мониторинг аварий не активен";
@@ -738,6 +716,7 @@ InitializeComponent();
 
         void CheckBox1CheckedChanged(object sender, EventArgs e)
 		{
+            HELP.BeepClick();
 			if(!checkBox1.Checked) DisplayAlarmsDGV(CurrentDXC.alarms);
         	else DisplayAlarmsDGV(CurrentDXC.GetCorrectedAlarms());
 		}
@@ -773,5 +752,23 @@ InitializeComponent();
 			Offers OF=new Offers();
 			OF.ShowDialog();
 		}
+
+        //mute / unmute
+        private void button7_Click(object sender, EventArgs e)
+        {
+            if (HELP.SoundsOn) //Sounds ON
+                //Выключаем
+            {
+                button7.FlatAppearance.BorderSize = 3;
+                button7.BackgroundImage = DXC.Properties.Resources.mute;
+                HELP.SoundsOn = false;
+            }
+            else //Включаем  звуки
+            {
+                button7.FlatAppearance.BorderSize = 0;
+                button7.BackgroundImage = DXC.Properties.Resources.umute;
+                HELP.SoundsOn = true;
+            }
+        }
     }
 }

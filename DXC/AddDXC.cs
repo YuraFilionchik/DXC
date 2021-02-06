@@ -45,8 +45,7 @@ namespace DXC
 		
 		void BtCancelClick(object sender, EventArgs e)
 		{
-			//IP=textBox1.Text.Trim();
-			//DXCName=textBox2.Text.Trim();
+			Close();
 		}
 	}
 }

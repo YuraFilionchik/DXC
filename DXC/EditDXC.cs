@@ -107,6 +107,7 @@ tbBackup.Text=SelectedDXC.backupPath;
 		{
 			
 			DialogResult dr= AddForm.ShowDialog();
+			if(dr!=DialogResult.OK) return;
 			ClassDXC newDxc=new ClassDXC(AddForm.IP);
 			newDxc.custom_Name=AddForm.DXCName;
 		if(listDXC.Any(x=>x.custom_Name==newDxc.custom_Name)) {
