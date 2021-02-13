@@ -22,7 +22,7 @@ namespace DXC
 	{
 		public ListBox LB1;
         public static bool SoundsOn = true;
-        private static string AlarmFileMajor = "sounds/chord.wav"; 
+        private static string AlarmFileMajor = "sounds/notify.wav"; 
         private static string AlarmFileMinor = "sounds/chimes.wav";
         private static string NotifySoundFile = "sound/notify.wav";
         private static string CloseAppFile = "sounds/close.wav";
@@ -48,12 +48,12 @@ namespace DXC
         //MainForm.InvokeLog("",msg);
 
         // }
-
+//TODO Add selecting Sounds menu
         #region Sounds
         private static void PlaySound(string file)
         { if(!SoundsOn) return;
             try
-            {
+            {//TODO use mediaplayer to change volume
                 System.Media.SoundPlayer sp = new SoundPlayer(file);
                 sp.Play();
             }
@@ -77,14 +77,16 @@ namespace DXC
             else PlaySound(DeniedFile2);
         }
         public static void BeepClick()
-        { PlaySound(ClickFile);}
+        { 
+        	PlaySound(ClickFile);}
 
         public static void BeepClose()
         {
             PlaySound(CloseAppFile);
         }
         public static void BeepOpen()
-        { PlaySound(OpenAppFile);}
+        {// PlaySound(OpenAppFile);
+        }
         public static void BeepBackupOK()
         { PlaySound(BackupOKFile);}
         public static void BeepNotify()
@@ -97,10 +99,11 @@ namespace DXC
         }
         public static void BeepAlarmMajor()
         {
-            new Thread(() =>
-            {
-                PlaySound(AlarmFileMajor);
-            }).Start();
+        	System.Console.Beep();
+//            new Thread(() =>
+//            {
+//                PlaySound(AlarmFileMajor);
+//            }).Start();
 
         }
         public static void BeepAlarmLong(int repeats)

@@ -445,8 +445,20 @@ if(!IpPingOK(ip)) {
 				buffAlarms=Program.Helper.MergeAlarms(buffAlarms,parseAlarms(buffer));//объединяем считанные аварии с прошлыми
                repeats--;
                }
-               //вышли из цикла 
-               alarms=Program.Helper.MergeAlarms(alarms,buffAlarms);
+                //вышли из цикла 
+
+                #region analyze new alarms and generate event for Beep
+
+                var diffAlarms = buffAlarms.Where(x => !alarms.Any(c => c == x));//only new alarms
+                if (diffAlarms.Any(x => this.Ports.Any(p => p.Monitored
+                                                            && p.BordNumber == x.bordNumber
+                                                            && p.PortNumber == x.portNumber)))
+                {//среди новых аварий есть аварии, принадлежащие порту с включенным мониторингом
+                    DXCEvent(this.custom_Name, "new alarms: "+diffAlarms.Count());
+                }
+
+                    #endregion
+                alarms=Program.Helper.MergeAlarms(alarms,buffAlarms);
                tc.Close(); 
             }
             catch (Exception exception)
@@ -665,7 +677,8 @@ if(!IpPingOK(ip)) {
 /// <returns></returns>
 	public static List<Alarm> parseAlarms(string buffer)
 		{
-		
+		string dateTimeLine="";
+		string Line="";
 			List<Alarm> list=new List<Alarm>();
 			if(String.IsNullOrWhiteSpace(buffer)) return list;
 			try {
@@ -673,6 +686,7 @@ if(!IpPingOK(ip)) {
 			foreach(string line in lines)
 			{//по факту перебор строк идет с конца хронологии событий,
 				//т.е. сначала конец события, а потом только начало в следующих строках
+				if(String.IsNullOrWhiteSpace(line)) continue;
 				var words=Split(line,"  ");//2 spaces
 				if(!words[0].Contains("IO-")) continue;
 				Alarm alm=new Alarm(false);
@@ -694,7 +708,8 @@ int np=0;
 				alm.portNumber=np;
 				alm.name=words[1];//TODO check Parse
 				alm.status=words[2].Trim();
-				var dateTime=DateTime.Parse(words[3].Trim('\a'));//.Split(' ')[0]);
+				dateTimeLine=words[3];//for debugging
+				var dateTime=DateTime.Parse(dateTimeLine.Trim('\a'));//.Split(' ')[0]);
 				#region Start End DateTime
 				if(alm.status=="EVENT")
 					alm.Start=alm.End=dateTime;
@@ -725,7 +740,10 @@ int np=0;
 			} catch (Exception ex) {
 				
 				//MessageBox.Show(ex.Message, "ParseAlarms");
-				Log.WriteLog("parseAlarms",ex.Message);
+				Log.WriteLog("parseAlarms",ex.Message+"\r\ndateLine: "
+				             +dateTimeLine+"\r\ndateLineTrim: "
+				             +dateTimeLine.Trim('\a')
+				            +"\r\nLine: "+ Line);
 				return list;
 			}
 		}

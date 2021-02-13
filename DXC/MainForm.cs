@@ -134,6 +134,12 @@ InitializeComponent();
         {
         	if(msg.Contains("Файл загружен")) HELP.BeepBackupOK();
             else if (msg.Contains("не доступен")) HELP.BeepDenied();
+            else if (msg.Contains("new alarms:"))
+            {
+                if(DXC_Name == CurrentDXC.custom_Name) HELP.BeepAlarmMajor();
+                else HELP.BeepAlarmMinor();
+                //return;
+            }
             InvokeLog(DXC_Name,msg);
         }
 
@@ -216,7 +222,9 @@ InitializeComponent();
         	//if(CurrentDXC!=(null)) CurrentDXC.DXCEvent-= new DXCEventHandler(CurrentDXC_DXCEvent);//отписка от старого dxc
         	CurrentDXC=dxc_list.Find(x=>x.custom_Name==lbAll.SelectedItem.ToString());
         	ClearLog();
-        	CurrentDXC.ReadInfoFromIP();
+            HELP.BeepClick();
+                CurrentDXC.ReadInfoFromIP();
+                CurrentDXC.ReadAlarms(2);
         	//CurrentDXC.DXCEvent+= new DXCEventHandler(CurrentDXC_DXCEvent);
         	InvokeLog("",CurrentDXC.ToString());
         	#region test
@@ -224,7 +232,7 @@ InitializeComponent();
         	#endregion
         	//lbAlmCount.Text="Актывных аварий: "+CurrentDXC.alarms.Count(x=>x.active);
         	dataGridView1.Rows.Clear();
-            HELP.BeepClick();
+           
         	if(!checkBox1.Checked)
         	{
         				
@@ -245,14 +253,12 @@ InitializeComponent();
         
         public void DisplayAlarmsDGV(List<Alarm> alarms)
         {
-
-
  string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
-            	if(dataGridView1.Rows.Count!=0 && 
-            	   dataGridView1.Rows.Count<alarms.Count)//есть новые аварии
-            		HELP.BeepAlarmMajor();
+            	//if(dataGridView1.Rows.Count!=0 && 
+            	//   dataGridView1.Rows.Count<alarms.Count)//есть новые аварии
+            	//	HELP.BeepAlarmMajor();
         	dataGridView1.Rows.Clear();
             #region	Manual Add row
             foreach (Alarm alarm in alarms) {
@@ -619,7 +625,7 @@ InitializeComponent();
         
 		void Button4Click(object sender, EventArgs e)
 		{
-			HELP.BeepAlarmMinor();
+			
 		}
         void Button6Click(object sender, EventArgs e)
         {
@@ -769,6 +775,19 @@ InitializeComponent();
                 button7.BackgroundImage = DXC.Properties.Resources.umute;
                 HELP.SoundsOn = true;
             }
+        }
+
+        //просмотр свойств порта
+        private void свойствоПортаToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listBox1.SelectedItems.Count == 0 || !listBox1.SelectedItem.ToString().Contains("Port")) return;
+            
+                Port port = new Port(listBox1.SelectedItem.ToString().Split('=')[1]);
+                string text=File.ReadAllText("dspcon.txt");
+                port.Connections.ParseTextDSP_CON(text);
+                ViewPort vp=new ViewPort(port);
+                vp.ShowDialog();
+                
         }
     }
 }
