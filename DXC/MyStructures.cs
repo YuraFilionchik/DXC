@@ -25,74 +25,74 @@ namespace DXC
 
     public class Alarm : IEquatable<Alarm>
 	{
-    	public string name{get;set;}
+    	public string Name{get;set;}
 		public DateTime Start{get;set;}
 		public DateTime End{get;set;}
-		public bool active{get;set;}
-		public string io{get;set;}
-		public string status{get;set;}
-		public int bordNumber{get;set;}
-		public int portNumber{get;set;}
-		private char sep;
+		public bool Active{get;set;}
+		public string Io{get;set;}
+		public string Status{get;set;}
+		public int BordNumber{get;set;}
+		public int PortNumber{get;set;}
+		private char _sep;
        
 public Alarm()
 {
-			name = "";
+			Name = "";
 			Start = new DateTime(1000,1,1);
 			End =new DateTime(1000,1,1);
-			active = true;
-			io = "";
-			status = "";
-			bordNumber = 0;
-			portNumber = 0;
-			sep = ';';
+			Active = true;
+			Io = "";
+			Status = "";
+			BordNumber = 0;
+			PortNumber = 0;
+			_sep = ';';
 }
-		public Alarm(bool Active)
+		public Alarm(bool active)
 		{
-			name = "";
+			Name = "";
 			Start = new DateTime(1000,1,1);
 			End =new DateTime(1000,1,1);
-			active = Active;
-			io = "";
-			status = "";
-			bordNumber = 0;
-			portNumber = 0;
-			sep = ';';
+			this.Active = active;
+			Io = "";
+			Status = "";
+			BordNumber = 0;
+			PortNumber = 0;
+			_sep = ';';
 			
 		}
 		public Alarm GetCopyAlarm()
 		{
-			Alarm A=new Alarm();
+			Alarm a=new Alarm();
 			
-			A.name = name; 
-			A.Start = Start;
-			A.End =End;
-			A.active = active;
-			A.io = io;
-			A.status = status;
-			A.bordNumber = bordNumber;
-			A.portNumber = portNumber;
-			A.sep = sep;
+			a.Name = Name; 
+			a.Start = Start;
+			a.End =End;
+			a.Active = Active;
+			a.Io = Io;
+			a.Status = Status;
+			a.BordNumber = BordNumber;
+			a.PortNumber = PortNumber;
+			a._sep = _sep;
 			
-			return A;
+			return a;
 			
 		}
 	    public override string ToString()
 	    {
-	    	if(End==new DateTime(1000,1,1)) return bordNumber+":"+portNumber+" == "+name+"\t\t\t"+status+
+	    	if(End==new DateTime(1000,1,1)) return BordNumber+":"+PortNumber+" == "+Name+"\t\t\t"+Status+
 	        	" \t\t"+Start.ToShortDateString()+" "+Start.ToLongTimeString()+" --> Активная";
-	    	else  return bordNumber+":"+portNumber+" == "+name+"\t\t\t"+status+
+	    	else  return BordNumber+":"+PortNumber+" == "+Name+"\t\t\t"+Status+
 	        	" \t\t"+Start.ToShortDateString()+" "+Start.ToLongTimeString()+" --> "+End.ToShortDateString()+" "+End.ToLongTimeString();
 	    }
-	    public string ExportLineCSV()
+	    public string ExportLineCsv()
 	    {
-	    	return Start.ToShortDateString() +" "+ Start.ToLongTimeString()+sep+
-	    		End.ToShortDateString()+" "+End.ToLongTimeString()+sep+
-	    		bordNumber+sep+
-	    		portNumber+sep+
-	    		name+sep+
-	    		status+sep+
-	    		active.ToString();
+	    	return Start.ToShortDateString() +" "+ Start.ToLongTimeString()+_sep+
+	    		End.ToShortDateString()+" "+End.ToLongTimeString()+_sep+
+	    		BordNumber+_sep+
+	    		PortNumber+_sep+
+	    		Name+_sep+
+	    		Status+_sep+
+	    		Active.ToString();
 	    }
 
 	    #region Equals and GetHashCode implementation
@@ -100,15 +100,15 @@ public Alarm()
 		// If you don't need it, you can just remove the region and the ": IEquatable<Struct1>" declaration.
 		public Alarm ParseLine(string line)
 		{
-			var words=line.Split(sep);
+			var words=line.Split(_sep);
 			if(words.Count()!=7) return this;
 			Start=DateTime.Parse(words[0]);
 			End=DateTime.Parse  (words[1]);
-			bordNumber=int.Parse(words[2]);
-			portNumber=int.Parse(words[3]);
-			name=				 words[4];
-			status=				 words[5];
-			active=	  bool.Parse(words[6]);
+			BordNumber=int.Parse(words[2]);
+			PortNumber=int.Parse(words[3]);
+			Name=				 words[4];
+			Status=				 words[5];
+			Active=	  bool.Parse(words[6]);
 			return this;
 			
 		}
@@ -125,9 +125,9 @@ public Alarm()
 			// add comparisions for all members here
 			return (this.Start.Date == other.Start.Date &&
 			        this.Start.ToLongTimeString()==other.Start.ToLongTimeString() &&
-			        this.name==other.name &&
-			        this.bordNumber==other.bordNumber &&
-			       this.portNumber==other.portNumber);
+			        this.Name==other.Name &&
+			        this.BordNumber==other.BordNumber &&
+			       this.PortNumber==other.PortNumber);
 		}
 
 		
@@ -142,35 +142,35 @@ public Alarm()
 		}
 		#endregion
 	}
-    public struct dxcinfo
+    public struct Dxcinfo
     {
-        public string sys_name;
-        public string nodalclock;
-        public string activeDBnuber;
-        public Dictionary<string, string> modules;
-        public DateTime time;
-        public DateTime date;
-        public TimeSpan dt; //корректировка времени
+        public string SysName;
+        public string Nodalclock;
+        public string ActiveDBnuber;
+        public Dictionary<string, string> Modules;
+        public DateTime Time;
+        public DateTime Date;
+        public TimeSpan Dt; //корректировка времени
         
         public override string ToString()
         {
             string res = "";
-            if(modules!=null && modules.Count!=0)
-            foreach (KeyValuePair<string, string> module in modules)
+            if(Modules!=null && Modules.Count!=0)
+            foreach (KeyValuePair<string, string> module in Modules)
             {
                 res += "slot." + module.Key + "=" + module.Value + "\n";
             }
             return res;
         }
-        public dxcinfo(bool a)
+        public Dxcinfo(bool a)
         {
-			this.sys_name = "";
-			nodalclock="";
-			activeDBnuber="";
-			modules=new Dictionary<string, string>();
-			time=new DateTime(0);
-			date=new DateTime(0);
-			dt=new TimeSpan(0);
+			this.SysName = "";
+			Nodalclock="";
+			ActiveDBnuber="";
+			Modules=new Dictionary<string, string>();
+			Time=new DateTime(0);
+			Date=new DateTime(0);
+			Dt=new TimeSpan(0);
         }
         #region Equals
 
@@ -183,8 +183,8 @@ public Alarm()
         /// <param name="obj">Другой объект, подлежащий сравнению. </param><filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
-            if (obj is dxcinfo)
-                return Equals((dxcinfo)obj); // use Equals method below
+            if (obj is Dxcinfo)
+                return Equals((Dxcinfo)obj); // use Equals method below
             else
                 return false;
         }
@@ -194,23 +194,23 @@ public Alarm()
             if (left.Count != right.Count) return true;
             return left.All(pair => right[pair.Key] == pair.Value);
         }
-        public bool Equals(dxcinfo other)
+        public bool Equals(Dxcinfo other)
         {
             // add comparisions for all members here
-            return (this.sys_name == other.sys_name &&
-                this.nodalclock == other.nodalclock &&
-                this.activeDBnuber == other.activeDBnuber &&
-                CompairModules(this.modules,other.modules)
+            return (this.SysName == other.SysName &&
+                this.Nodalclock == other.Nodalclock &&
+                this.ActiveDBnuber == other.ActiveDBnuber &&
+                CompairModules(this.Modules,other.Modules)
                 );
         }
 
 
-        public static bool operator ==(dxcinfo left, dxcinfo right)
+        public static bool operator ==(Dxcinfo left, Dxcinfo right)
         {
             return left.Equals(right);
         }
 
-        public static bool operator !=(dxcinfo left, dxcinfo right)
+        public static bool operator !=(Dxcinfo left, Dxcinfo right)
         {
             return !left.Equals(right);
         }

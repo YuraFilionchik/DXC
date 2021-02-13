@@ -8,7 +8,7 @@
  */
 namespace DXC
 {
-	partial class AddDXC
+	partial class AddDxc
 	{
 		/// <summary>
 		/// Designer variable used to keep track of non-visual components.
@@ -53,7 +53,7 @@ namespace DXC
 			this.btOK.TabIndex = 0;
 			this.btOK.Text = "Добавить";
 			this.btOK.UseVisualStyleBackColor = true;
-			this.btOK.Click += new System.EventHandler(this.BtOKClick);
+			this.btOK.Click += new System.EventHandler(this.BtOkClick);
 			// 
 			// btCancel
 			// 

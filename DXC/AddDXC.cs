@@ -15,21 +15,21 @@ namespace DXC
 	/// <summary>
 	/// Description of AddDXC.
 	/// </summary>
-	public partial class AddDXC : Form
+	public partial class AddDxc : Form
 	{
-		public string IP="";
-		public string DXCName="";
-		public AddDXC()
+		public string Ip="";
+		public string DxcName="";
+		public AddDxc()
 		{
 
 			InitializeComponent();
-			this.Shown+= delegate { textBox1.Text=IP; textBox2.Text=DXCName; };
+			this.Shown+= delegate { textBox1.Text=Ip; textBox2.Text=DxcName; };
 			
 		}
 		
-		void BtOKClick(object sender, EventArgs e)
+		void BtOkClick(object sender, EventArgs e)
 		{
-			if(!MainForm.IPformat(textBox1.Text)) {
+			if(!MainForm.Pformat(textBox1.Text)) {
 				MessageBox.Show("Неверный формат IP адреса");
 				return;
 			}
@@ -37,8 +37,8 @@ namespace DXC
 				MessageBox.Show("Введите какое-нибудь имя для DXC");
 				return;
 			}
-			IP=textBox1.Text.Trim();
-			DXCName=textBox2.Text.Trim();
+			Ip=textBox1.Text.Trim();
+			DxcName=textBox2.Text.Trim();
 		this.DialogResult= DialogResult.OK;
 		Close();
 		}

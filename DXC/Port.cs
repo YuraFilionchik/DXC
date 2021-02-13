@@ -31,9 +31,9 @@ namespace DXC
 		public bool Alarmed{get;set;}
 		public bool Monitored{get;set;}
 		public List<Alarm> Alarms;
-		//TODO add fields data, CrossCon-s
+		//TODO add fields data
         public Connections Connections;
-		private char sep=';';
+		private readonly char _sep=';';
 		public Port()
 		{
 			Name="";
@@ -46,7 +46,7 @@ namespace DXC
 		}
 		public override string ToString()
 		{
-			return String.Format("Port={1}{0}{2}{0}{3}{0}{4}",sep,BordNumber,PortNumber,Name,Monitored);
+			return String.Format("Port={1}{0}{2}{0}{3}{0}{4}",_sep,BordNumber,PortNumber,Name,Monitored);
 		}
 		
 		/// <summary>
@@ -56,7 +56,7 @@ namespace DXC
 		public Port(string line)
 		{
 			if(String.IsNullOrWhiteSpace(line)) return;
-			var words=line.Split(sep);
+			var words=line.Split(_sep);
 			if(words.Length!=4) return;
 			Name=words[2];
 			int b=0;
@@ -76,28 +76,28 @@ namespace DXC
 
 	public class CrossCon
     {
-        public int L_ts=-1;
-        public int L_bord=-1;
-        public int L_port=-1;
-        public int R_ts=-1;
-        public int R_bord=-1;
-        public int R_port=-1;
-        public string status="NC";
+        public int LTs=-1;
+        public int LBord=-1;
+        public int LPort=-1;
+        public int RTs=-1;
+        public int RBord=-1;
+        public int RPort=-1;
+        public string Status="NC";
 
         public CrossCon()
         {
 			
         }
 
-        public CrossCon(int Lb,int Lp,int Lts,int Rb,int Rp,int Rts,string stat)
+        public CrossCon(int lb,int lp,int lts,int rb,int rp,int rts,string stat)
         {
-            L_bord = Lb;
-            L_port = Lp;
-            L_ts = Lts;
-            R_bord = Rb;
-            R_port = Rp;
-            R_ts = Rts;
-            status = stat;
+            LBord = lb;
+            LPort = lp;
+            LTs = lts;
+            RBord = rb;
+            RPort = rp;
+            RTs = rts;
+            Status = stat;
         }
     }
 
@@ -113,7 +113,7 @@ namespace DXC
             Cons = new CrossCon[31];
             for (var i = 0; i < Cons.Length; i++)
             {
-                Cons[i] = new CrossCon {L_bord = p.BordNumber, L_port = p.PortNumber, L_ts = i+1};
+                Cons[i] = new CrossCon {LBord = p.BordNumber, LPort = p.PortNumber, LTs = i+1};
             }
         }
         
@@ -133,25 +133,25 @@ for (int i = 0; i < lines.Length; i++) {
 	
 	if(lines[i].Contains("TS  :"))
 	{
-		var TS_string=lines[i].Split(':')[1].Trim();//right side after :
-		var TYPE_string=lines[i+1].Split(':')[1].Trim();
-		var DEST_string=lines[i+2].Substring(7).Trim();
-		var bloksTS=Split10chars(TS_string);
-		var bloksTYPE=Split10chars(TYPE_string);
-		var bloksDEST=Split10chars(DEST_string);
-		if(bloksTS.Length==0 || bloksDEST.Length==0 || bloksTYPE.Length==0) continue;
-		for(int t=0; t<bloksTS.Length; t++) //перебор всех блоков в строке
+		var tsString=lines[i].Split(':')[1].Trim();//right side after :
+		var typeString=lines[i+1].Split(':')[1].Trim();
+		var destString=lines[i+2].Substring(7).Trim();
+		var bloksTs=Split10Chars(tsString);
+		var bloksType=Split10Chars(typeString);
+		var bloksDest=Split10Chars(destString);
+		if(bloksTs.Length==0 || bloksDest.Length==0 || bloksType.Length==0) continue;
+		for(int t=0; t<bloksTs.Length; t++) //перебор всех блоков в строке
 		{
-			int TS=-1; //number of TS
-			string N=bloksTS[t].Split('O')[1].Trim(); //'NO 22     '
-			if(!int.TryParse(N, out TS)) continue;
-			string TYPE=bloksTYPE[t].Trim();
-			var DEST=bloksDEST[t].Trim().Split(':');
-			if(DEST.Length!=3) continue;
-			Cons[TS-1].status=TYPE;
-			Cons[TS-1].R_bord=int.Parse(DEST[0].Trim());
-			Cons[TS-1].R_port=int.Parse(DEST[1].Trim());
-			Cons[TS-1].R_ts=int.Parse(DEST[2].Trim().TrimEnd('F').TrimEnd('/'));
+			int ts=-1; //number of TS
+			string n=bloksTs[t].Split('O')[1].Trim(); //'NO 22     '
+			if(!int.TryParse(n, out ts)) continue;
+			string type=bloksType[t].Trim();
+			var dest=bloksDest[t].Trim().Split(':');
+			if(dest.Length!=3) continue;
+			Cons[ts-1].Status=type;
+			Cons[ts-1].RBord=int.Parse(dest[0].Trim());
+			Cons[ts-1].RPort=int.Parse(dest[1].Trim());
+			Cons[ts-1].RTs=int.Parse(dest[2].Trim().TrimEnd('F').TrimEnd('/'));
 		}
 	} 
 }
@@ -167,7 +167,7 @@ for (int i = 0; i < lines.Length; i++) {
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        private string[] Split10chars(string input)
+        private string[] Split10Chars(string input)
         {	
         	try {
         		string[] bloks;
@@ -178,7 +178,8 @@ for (int i = 0; i < lines.Length; i++) {
         		for (int i = 0; i <bloks.Length; i++) 
         		{
         				if(i!=bloks.Length-1)bloks[i]=input.Substring(i*10,10);
-        				else bloks[i]=input.Substring(i*10);//last blok
+        				else
+                            bloks[i]=input.Substring(i*10);//last blok
         		}
         		return bloks;
         	} catch (Exception ex) {

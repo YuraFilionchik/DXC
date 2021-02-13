@@ -9,12 +9,12 @@ namespace DXC
 {
     public class TelnetClient : IDisposable, IServiceProvider
     {
-        protected readonly Socket theSocket;
-        private readonly byte[] m_buffer;
-        private SocketError m_error;
-        private readonly AsyncCallback receiveDataCallback;
-        private readonly AsyncCallback initalizeCallback;
-        private readonly BinaryReader m_reader;
+        protected readonly Socket TheSocket;
+        private readonly byte[] _mBuffer;
+        private SocketError _mError;
+        private readonly AsyncCallback _receiveDataCallback;
+        private readonly AsyncCallback _initalizeCallback;
+        private readonly BinaryReader _mReader;
 
         public event EventHandler<DataReceivedEventArgs> DataReceived;
 
@@ -26,32 +26,32 @@ namespace DXC
 
         protected void FireDataReceived(int count)
         {
-            FireDataReceived(this, new DataReceivedEventArgs(count, m_buffer));
+            FireDataReceived(this, new DataReceivedEventArgs(count, _mBuffer));
         }
 
         public TelnetClient()
         {
-            theSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            m_buffer = new byte[32767];
-            receiveDataCallback = new AsyncCallback(ReceiveData);
-            initalizeCallback = new AsyncCallback(Initialize);
-            m_reader = new BinaryReader(new MemoryStream(m_buffer), Encoding.ASCII);
+            TheSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _mBuffer = new byte[32767];
+            _receiveDataCallback = new AsyncCallback(ReceiveData);
+            _initalizeCallback = new AsyncCallback(Initialize);
+            _mReader = new BinaryReader(new MemoryStream(_mBuffer), Encoding.ASCII);
         }
 
         private void Initialize(IAsyncResult ar)
         {
-            theSocket.BeginReceive(m_buffer, 0, m_buffer.Length, SocketFlags.None, out m_error,
-                receiveDataCallback, null);
+            TheSocket.BeginReceive(_mBuffer, 0, _mBuffer.Length, SocketFlags.None, out _mError,
+                _receiveDataCallback, null);
         }
 
         private void ReceiveData(IAsyncResult ar)
         {
-            FireDataReceived(theSocket.EndReceive(ar));
+            FireDataReceived(TheSocket.EndReceive(ar));
         }
 
         public void Send(byte[] buffer)
         {
-            theSocket.EndSend(theSocket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, out m_error, initalizeCallback, null));
+            TheSocket.EndSend(TheSocket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, out _mError, _initalizeCallback, null));
         }
 
         public void Send(string s)
@@ -66,31 +66,31 @@ namespace DXC
 
         
 
-        public void Connect(EndPoint remoteEP)
+        public void Connect(EndPoint remoteEp)
         {
-            theSocket.Connect(remoteEP);
+            TheSocket.Connect(remoteEp);
             Initialize(null);
         }
 
         public SocketError LastError
         {
-            get { return m_error; }
+            get { return _mError; }
         }
 
         public BinaryReader InputBuffer
         {
-            get { return m_reader; }
+            get { return _mReader; }
         }
 
         public void Connect(string host, int port)
         {
-            theSocket.Connect(host, port);
+            TheSocket.Connect(host, port);
             Initialize(null);
         }
 
         public void Connect(IPAddress ip, int port)
         {
-            theSocket.Connect(ip,port);
+            TheSocket.Connect(ip,port);
             Initialize(null);
         }
 
@@ -102,11 +102,11 @@ namespace DXC
             {
                 switch (b)
                 {
-                    case (byte)Verbs.DO:
-                    case (byte)Verbs.DONT:
-                    case (byte)Verbs.IAC:
-                    case (byte)Verbs.WILL:
-                    case (byte)Verbs.WONT:
+                    case (byte)Verbs.Do:
+                    case (byte)Verbs.Dont:
+                    case (byte)Verbs.Iac:
+                    case (byte)Verbs.Will:
+                    case (byte)Verbs.Wont:
                     case 0:
                     case 1:
                     case 3:
@@ -133,11 +133,11 @@ namespace DXC
 
         public bool IsConnected()
         {
-            return theSocket.Connected;
+            return TheSocket.Connected;
         }
         public void Disconnect()
         {
-            theSocket.Disconnect(false);
+            TheSocket.Disconnect(false);
         }
 
         
@@ -146,8 +146,8 @@ namespace DXC
 
         public void Dispose()
         {
-            m_reader.Close();
-            theSocket.Close();
+            _mReader.Close();
+            TheSocket.Close();
         }
 
         #endregion
@@ -157,7 +157,7 @@ namespace DXC
         public object GetService(Type serviceType)
         {
             if (serviceType.FullName == typeof(Socket).FullName)
-                return theSocket;
+                return TheSocket;
             return null;
         }
 
@@ -165,7 +165,7 @@ namespace DXC
 
         public static explicit operator Socket(TelnetClient client)
         {
-            return client.theSocket;
+            return client.TheSocket;
         }
 
         public static IPAddress ConvertToIPv4(byte[] address)

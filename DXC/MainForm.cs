@@ -42,46 +42,48 @@ namespace DXC
                 MainForm._instance = value;
             }
         }
-		public string currentIP;
-		public string backupPath;
+		public string CurrentIp;
+		public string BackupPath;
         public Thread UpdateAlarmsThread;
-		private string PropertiesFile = "DXC.ini";
+		private string _propertiesFile = "DXC.ini";
 	    public IniFile Cfg;
-	    public ClassDXC CurrentDXC;
-	    public List<ClassDXC> dxc_list=new List<ClassDXC>();//список всех DXC
-	    int IntervalRequests=30000; //Интервал опроса DXC при вкл. мониторинге
-		int IntervalProgressTimer=500;	    //интервал обновления прогрессбара
-	    int RemainMilisec;
-	    Color MonitorButtonOffColor=Color.LightBlue;
-	    Color MonitorButtonOnColor=Color.IndianRed;
+	    public ClassDxc CurrentDxc;
+	    public List<ClassDxc> DxcList=new List<ClassDxc>();//список всех DXC
+	    int _intervalRequests=30000; //Интервал опроса DXC при вкл. мониторинге
+		int _intervalProgressTimer=500;	    //интервал обновления прогрессбара
+	    int _remainMilisec;
+	    Color _monitorButtonOffColor=Color.LightBlue;
+	    Color _monitorButtonOnColor=Color.IndianRed;
         public MainForm()
 		{
         	 string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
 InitializeComponent();
-           Cfg = new IniFile(PropertiesFile);
-           Program.Helper.LB1=listBox1;
+           Cfg = new IniFile(_propertiesFile);
+           Program.Helper.Lb1=listBox1;
             ReadSettings();
-            ViewDXCNames(dxc_list);
-            timer1.Interval=IntervalRequests;
-            timerProgress.Interval=IntervalProgressTimer;
-            tbInterval.Text=(IntervalRequests*0.001).ToString();
+            ViewDxcNames(DxcList);
+            timer1.Interval=_intervalRequests;
+            timerProgress.Interval=_intervalProgressTimer;
+            tbInterval.Text=(_intervalRequests*0.001).ToString();
 			dataGridView1.ScrollBars=ScrollBars.Both;
-			RemainMilisec=IntervalRequests;
+			_remainMilisec=_intervalRequests;
           
 
  #region events
  			listBox1.SelectedValueChanged+= new EventHandler(listBox1_SelectedValueChanged);
            this.Closing += MainForm_Closing;
            this.Shown+=	FormShown;
-           this.lbAll.SelectedIndexChanged+= new EventHandler(lbAllSelectedIndexChanged);
+           this.lbAll.SelectedIndexChanged+= new EventHandler(LbAllSelectedIndexChanged);
            if(lbAll.Items.Count>0) lbAll.SelectedIndex=0;
             timerProgress.Tick+= new EventHandler(timerProgress_Tick);
             timer1.Tick+= new EventHandler(timer1_Tick);
-            foreach (var dxc in dxc_list)
+                toolStripTextBox1.KeyPress += ToolStripTextBox1_KeyPress;
+                contextPorts.Opening += ContextPorts_Opened;
+            foreach (var dxc in DxcList)
             {
-                dxc.DXCEvent+= new DXCEventHandler(CurrentDXC_DXCEvent);
+                dxc.DxcEvent+= new DxcEventHandler(CurrentDXC_DXCEvent);
                 }
 #endregion
             }
@@ -94,7 +96,11 @@ InitializeComponent();
 
        
 
-        
+
+
+
+
+
         //Selected port
         void listBox1_SelectedValueChanged(object sender, EventArgs e)
         {
@@ -106,10 +112,10 @@ InitializeComponent();
         			//отображаем только выбранный порт
         		{
         			Port port=new Port(listBox1.SelectedItem.ToString().Split('=')[1]);
-        			DisplayAlarmsDGV(CurrentDXC.alarms.Where(x=>x.portNumber==port.PortNumber && 
-        			                                         x.bordNumber==port.BordNumber).ToList());
+        			DisplayAlarmsDgv(CurrentDxc.Alarms.Where(x=>x.PortNumber==port.PortNumber && 
+        			                                         x.BordNumber==port.BordNumber).ToList());
         		} else       		
-        		DisplayAlarmsDGV(CurrentDXC.alarms);
+        		DisplayAlarmsDgv(CurrentDxc.Alarms);
         	}
         	else 
         	{
@@ -117,10 +123,10 @@ InitializeComponent();
         			//отображаем только выбранный порт
         		{
         			Port port=new Port(listBox1.SelectedItem.ToString().Split('=')[1]);
-        			DisplayAlarmsDGV(CurrentDXC.GetCorrectedAlarms().Where(x=>x.portNumber==port.PortNumber && 
-        			                                         x.bordNumber==port.BordNumber).ToList());
+        			DisplayAlarmsDgv(CurrentDxc.GetCorrectedAlarms().Where(x=>x.PortNumber==port.PortNumber && 
+        			                                         x.BordNumber==port.BordNumber).ToList());
         		}else
-        		DisplayAlarmsDGV(CurrentDXC.GetCorrectedAlarms());
+        		DisplayAlarmsDgv(CurrentDxc.GetCorrectedAlarms());
         	}
         	} catch (Exception ex) {
         		MessageBox.Show(ex.Message);
@@ -129,18 +135,57 @@ InitializeComponent();
 
         }
 
-        //обработчик событий DXC
-        void CurrentDXC_DXCEvent(string DXC_Name, string msg)
+        //переименование порта
+        private void ToolStripTextBox1_KeyPress(object sender, KeyPressEventArgs e)
         {
-        	if(msg.Contains("Файл загружен")) HELP.BeepBackupOK();
-            else if (msg.Contains("не доступен")) HELP.BeepDenied();
+            try
+            {
+                if (e.KeyChar == (char) 13) //Enter
+                {
+                    string name = toolStripTextBox1.TextBox.Text;
+                    Port p = GetPortFromSelectedItem();
+                    if(p.BordNumber==0) return;
+                    CurrentDxc.Ports.Find(x => x.BordNumber == p.BordNumber
+                                               && x.PortNumber == p.PortNumber).Name = name;
+                    contextPorts.Close();
+                    ClearLog();
+                    InvokeLog("", CurrentDxc.ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Переименование порта");
+                Log.WriteLog("ToolStripRenamePort",ex.Message);
+            }
+        }
+        //Появление меню выбранного порта
+        private void ContextPorts_Opened(object sender, EventArgs e)
+        {
+            Port p = GetPortFromSelectedItem();
+            if(p.BordNumber==0)
+            {
+                toolStripTextBox1.TextBox.Text="";
+                return;
+
+            }
+            string name = CurrentDxc.Ports.Find(x => x.BordNumber == p.BordNumber
+                                                     && x.PortNumber == p.PortNumber).Name;
+            toolStripTextBox1.TextBox.Text = name;
+        }
+
+
+        //обработчик событий DXC
+        void CurrentDXC_DXCEvent(string dxcName, string msg)
+        {
+        	if(msg.Contains("Файл загружен")) Help.BeepBackupOk();
+            else if (msg.Contains("не доступен")) Help.BeepDenied();
             else if (msg.Contains("new alarms:"))
             {
-                if(DXC_Name == CurrentDXC.custom_Name) HELP.BeepAlarmMajor();
-                else HELP.BeepAlarmMinor();
+                if(dxcName == CurrentDxc.CustomName) Help.BeepAlarmMajor();
+                else Help.BeepAlarmMinor();
                 //return;
             }
-            InvokeLog(DXC_Name,msg);
+            InvokeLog(dxcName,msg);
         }
 
         //обновление аварий
@@ -152,22 +197,22 @@ InitializeComponent();
                 timerProgress.Stop();
                 var t0=DateTime.Now;
         
-                if(CurrentDXC==null) return;
+                if(CurrentDxc==null) return;
                 DisableButtons();
-                CurrentDXC.ReadAlarms(2);
-                if(!checkBox1.Checked) DisplayAlarmsDGV(CurrentDXC.alarms);
-                else DisplayAlarmsDGV(CurrentDXC.GetCorrectedAlarms());
+                CurrentDxc.ReadAlarms(2);
+                if(!checkBox1.Checked) DisplayAlarmsDgv(CurrentDxc.Alarms);
+                else DisplayAlarmsDgv(CurrentDxc.GetCorrectedAlarms());
                 #region read alarms other DXC
                 UpdateAlarmsThread = new Thread(() => {
-                    foreach (var dxc in dxc_list)
+                    foreach (var dxc in DxcList)
                     {
-                        if (dxc == CurrentDXC) continue;
-                        int oldCount= dxc.alarms.Count;
+                        if (dxc == CurrentDxc) continue;
+                        int oldCount= dxc.Alarms.Count;
                         dxc.ReadAlarms(2);
-                        if (dxc.alarms.Count > oldCount) //new alarms exist
+                        if (dxc.Alarms.Count > oldCount) //new alarms exist
                         {
-                            InvokeLog("", dxc.custom_Name + " = новая авария");
-                            HELP.BeepAlarmMinor();
+                            InvokeLog("", dxc.CustomName + " = новая авария");
+                            Help.BeepAlarmMinor();
                         }
                     }
                 });
@@ -177,7 +222,7 @@ InitializeComponent();
                 #endregion
                 EnableButtons();
         	TimeSpan dt=DateTime.Now-t0;
-        	RemainMilisec=timer1.Interval-(int)dt.TotalMilliseconds;
+        	_remainMilisec=timer1.Interval-(int)dt.TotalMilliseconds;
         	ProgressBar1.Value=0;
         	#region logging
         	//Log.WriteLog(methodName,"time0: "+t0.ToLongTimeString());
@@ -200,9 +245,9 @@ InitializeComponent();
         	 string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
-            ProgressBar1.Value=(int)(100*(timer1.Interval-RemainMilisec)/timer1.Interval)+1;
-        	lbProgressAfter.Text=((int)(RemainMilisec)/1000).ToString()+"c";
-        	RemainMilisec-=IntervalProgressTimer;
+            ProgressBar1.Value=(int)(100*(timer1.Interval-_remainMilisec)/timer1.Interval)+1;
+        	lbProgressAfter.Text=((int)(_remainMilisec)/1000).ToString()+"c";
+        	_remainMilisec-=_intervalProgressTimer;
             }
             catch (Exception exception)
             {
@@ -213,20 +258,20 @@ InitializeComponent();
         }
         
         //Select DXC in listbox
-        void lbAllSelectedIndexChanged(object sender, EventArgs e)
+        void LbAllSelectedIndexChanged(object sender, EventArgs e)
         {
         	 string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
 			if(lbAll.SelectedItems.Count!=1)return;
         	//if(CurrentDXC!=(null)) CurrentDXC.DXCEvent-= new DXCEventHandler(CurrentDXC_DXCEvent);//отписка от старого dxc
-        	CurrentDXC=dxc_list.Find(x=>x.custom_Name==lbAll.SelectedItem.ToString());
+        	CurrentDxc=DxcList.Find(x=>x.CustomName==lbAll.SelectedItem.ToString());
         	ClearLog();
-            HELP.BeepClick();
-                CurrentDXC.ReadInfoFromIP();
-                CurrentDXC.ReadAlarms(2);
+            Help.BeepClick();
+                CurrentDxc.ReadInfoFromIp();
+                CurrentDxc.ReadAlarms(2);
         	//CurrentDXC.DXCEvent+= new DXCEventHandler(CurrentDXC_DXCEvent);
-        	InvokeLog("",CurrentDXC.ToString());
+        	InvokeLog("",CurrentDxc.ToString());
         	#region test
         	//CurrentDXC.alarms=ReadAlarmsFromFile("test_ALARMS.txt");
         	#endregion
@@ -236,12 +281,12 @@ InitializeComponent();
         	if(!checkBox1.Checked)
         	{
         				
-        		DisplayAlarmsDGV(CurrentDXC.alarms);
+        		DisplayAlarmsDgv(CurrentDxc.Alarms);
         	}
         	else 
         	{
         		
-        		DisplayAlarmsDGV(CurrentDXC.GetCorrectedAlarms());
+        		DisplayAlarmsDgv(CurrentDxc.GetCorrectedAlarms());
         	}
             }
             catch (Exception exception)
@@ -251,7 +296,7 @@ InitializeComponent();
         	
         }
         
-        public void DisplayAlarmsDGV(List<Alarm> alarms)
+        public void DisplayAlarmsDgv(List<Alarm> alarms)
         {
  string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
@@ -265,25 +310,25 @@ InitializeComponent();
         	
         			DataGridViewRow row=new DataGridViewRow();
         			row.CreateCells(dataGridView1);
-        		row.Cells[0].Value=alarm.bordNumber;
-        		row.Cells[1].Value=alarm.portNumber;
-        		Port p=CurrentDXC.Ports.FirstOrDefault(c=>c.
-        		                                                   BordNumber==alarm.bordNumber && 
-        		                                                   c.PortNumber==alarm.portNumber);
+        		row.Cells[0].Value=alarm.BordNumber;
+        		row.Cells[1].Value=alarm.PortNumber;
+        		Port p=CurrentDxc.Ports.FirstOrDefault(c=>c.
+        		                                                   BordNumber==alarm.BordNumber && 
+        		                                                   c.PortNumber==alarm.PortNumber);
         		if(p!=null)
         		row.Cells[2].Value=p.Name;
-        		row.Cells[3].Value=alarm.name;
+        		row.Cells[3].Value=alarm.Name;
         		row.Cells[4].Value=alarm.Start;
         		row.Cells[5].Value=alarm.End;
-        		row.Cells[6].Value=alarm.status;
+        		row.Cells[6].Value=alarm.Status;
 			var style=row.DefaultCellStyle;
-        		if(alarm.active) {
+        		if(alarm.Active) {
         			style.BackColor=Color.LightCoral;
         		}
-        		if(!alarm.active) {
+        		if(!alarm.Active) {
         			style.BackColor=Color.LightGreen;
         		}
-        		if(alarm.status=="EVENT") {
+        		if(alarm.Status=="EVENT") {
         			style.BackColor=Color.LightGray;
         		}
         		row.DefaultCellStyle=style;
@@ -295,7 +340,7 @@ InitializeComponent();
         	//if(alarms.Any(x=>x.active)) System.Console.Beep();
         	//Сортировка 
         	dataGridView1.Sort(dataGridView1.Columns[4],System.ComponentModel.ListSortDirection.Descending);
-        	lbAlmCount.Text="Активных аварий: "+alarms.Count(x=>x.active);
+        	lbAlmCount.Text="Активных аварий: "+alarms.Count(x=>x.Active);
         	lbAlmCount.Text+="   Всего в списке: "+alarms.Count();
         	dataGridView1.AllowUserToResizeColumns=true;
             }
@@ -308,7 +353,7 @@ InitializeComponent();
         }
 		void FormShown(object sender, EventArgs e)
 		{
-			HELP.BeepOpen();
+			Help.BeepOpen();
 		}
        
 
@@ -317,7 +362,7 @@ InitializeComponent();
         	 string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
-                HELP.BeepClose();
+                Help.BeepClose();
                 StopUpdateAlarmsThread();
 			SetMonitoring(false);
         	SaveSettings();
@@ -347,13 +392,13 @@ InitializeComponent();
         	var lines=File.ReadAllLines(file);
         	
         	foreach (string line in lines) {
-        		Alarm A=new Alarm(false);
-        		A.ParseLine(line);
-        		oldAlarms.Add(A);
+        		Alarm a=new Alarm(false);
+        		a.ParseLine(line);
+        		oldAlarms.Add(a);
         	}
         	
         	//поиск и закрытие отработанных аварий, которые в старых списках еще открыты
-        	var MergedAlarms=Program.Helper.MergeAlarms(oldAlarms,alarms.ToList());
+        	var mergedAlarms=Program.Helper.MergeAlarms(oldAlarms,alarms.ToList());
 //        	for (int i = 0; i < oldAlarms.Count(); i++) {
 //        		var A=oldAlarms[i];
 //        		//только активные
@@ -376,12 +421,12 @@ InitializeComponent();
 //        	}
         	File.WriteAllText(file,""); //обнулили файл
         	List<string> list=new List<string>();
-        	result=MergedAlarms.ConvertAll(x=>x.ExportLineCSV());
+        	result=mergedAlarms.ConvertAll(x=>x.ExportLineCsv());
         	
 
         	}//if file not exist
         	else {
-        		result=(alarms as List<Alarm>).ConvertAll(x=>x.ExportLineCSV());
+        		result=(alarms as List<Alarm>).ConvertAll(x=>x.ExportLineCsv());
         	}
         	File.WriteAllLines(file, result.ToArray());
 }
@@ -398,11 +443,11 @@ InitializeComponent();
         /// </summary>
         /// <param name="dxc"></param>
         /// <returns></returns>
-        public static string GetAlarmsFilePath(ClassDXC dxc)
+        public static string GetAlarmsFilePath(ClassDxc dxc)
         {
         	if(dxc == null) return "";
-        	if(!String.IsNullOrWhiteSpace(dxc.info.sys_name)) return
-        		dxc.info.sys_name+"-"+dxc.ip+"-Alarms.txt";
+        	if(!String.IsNullOrWhiteSpace(dxc.Info.SysName)) return
+        		dxc.Info.SysName+"-"+dxc.Ip+"-Alarms.txt";
         	else return "";
         }
         public void SaveSettings()
@@ -410,17 +455,17 @@ InitializeComponent();
         	try {
         		#region Сохранение списка IP-NAME
         		Cfg.DeleteSection("LIST_DXC");
-        		foreach (ClassDXC dxc in dxc_list) {
-        			Cfg.Write("LIST_DXC",dxc.ip,dxc.custom_Name);
+        		foreach (ClassDxc dxc in DxcList) {
+        			Cfg.Write("LIST_DXC",dxc.Ip,dxc.CustomName);
         		}
         		#endregion
         		#region Сохранение информации о DXC
         		//каждый DXC в отдельной секции
-        		foreach (ClassDXC dxc in dxc_list) {
+        		foreach (ClassDxc dxc in DxcList) {
          			dxc.SaveToFile(Cfg);
         		}
         		#endregion
-        		Cfg.Write("Global","backupDir",backupPath);
+        		Cfg.Write("Global","backupDir",BackupPath);
         	} catch (Exception ex) {
         		
         		MessageBox.Show(ex.Message, "saving settings");
@@ -433,38 +478,38 @@ InitializeComponent();
             try
             {
             	#region Чтение имен DXC
-			    	dxc_list.Clear();
-	        var DXC_keys=Cfg.GetAllKeys("LIST_DXC");
-	        if(DXC_keys.Count()>0) //read all DXC NAME--IP
+			    	DxcList.Clear();
+	        var dxcKeys=Cfg.GetAllKeys("LIST_DXC");
+	        if(dxcKeys.Count()>0) //read all DXC NAME--IP
 	        {//KEY - IP
 	        	//VALUE - NAME
-	        	foreach (var dxc_key in DXC_keys) {
-	        		if(String.IsNullOrWhiteSpace(dxc_key)) continue;
-	        		ClassDXC newDXC=new ClassDXC(dxc_key);
-	        		newDXC.custom_Name=Cfg.ReadINI("LIST_DXC",dxc_key);
-					if (dxc_list.All(x => x.ip != dxc_key))
-						dxc_list.Add(newDXC);
+	        	foreach (var dxcKey in dxcKeys) {
+	        		if(String.IsNullOrWhiteSpace(dxcKey)) continue;
+	        		ClassDxc newDxc=new ClassDxc(dxcKey);
+	        		newDxc.CustomName=Cfg.ReadIni("LIST_DXC",dxcKey);
+					if (DxcList.All(x => x.Ip != dxcKey))
+						DxcList.Add(newDxc);
 	        	}
 	        }
 #endregion
 #region Чтение Информации о DXC
-			if (dxc_list.Any()) {
-				for (int i = 0; i < dxc_list.Count; i++) {
-					ClassDXC D = dxc_list[i];
-					D.LoadFromFile(Cfg);
+			if (DxcList.Any()) {
+				for (int i = 0; i < DxcList.Count; i++) {
+					ClassDxc d = DxcList[i];
+					d.LoadFromFile(Cfg);
 					//D.backupPath = Cfg.ReadINI(D.ip, "BackupPath");
 					//D.info.sys_name = Cfg.ReadINI(D.ip, "Sys_Name");
-					string file = Cfg.ReadINI(D.ip, "Alarms_file");
+					string file = Cfg.ReadIni(d.Ip, "Alarms_file");
 					//if(Cfg.KeyExists("TimeCorrection",D.ip)) D.info.dt=new TimeSpan(long.Parse(Cfg.ReadINI(D.ip,"TimeCorrection")));
-					if(File.Exists(file))D.ReadAlarmsFromFile(file);
-					dxc_list[i] = D;
+					if(File.Exists(file))d.ReadAlarmsFromFile(file);
+					DxcList[i] = d;
 				}
 			}
 
 #endregion
 	
-	        if (Cfg.KeyExists("backupDir","Global")) backupPath = Cfg.ReadINI("Global", "backupDir");
-	        else backupPath = "";
+	        if (Cfg.KeyExists("backupDir","Global")) BackupPath = Cfg.ReadIni("Global", "backupDir");
+	        else BackupPath = "";
 
             }
             catch (Exception exception)
@@ -475,7 +520,7 @@ InitializeComponent();
 
 
 	    }
-	   static public bool IPformat(string ip)
+	   static public bool Pformat(string ip)
 	    {
 	    	var segments=ip.Split('.');
 	    	if(segments.Length!=4) return false;
@@ -490,13 +535,13 @@ InitializeComponent();
 		void ВыбратьПапкуДляBackupToolStripMenuItemClick(object sender, EventArgs e)
 		{
 			
-		    if (Directory.Exists(backupPath)) folderBrowserDialog1.SelectedPath = backupPath;
+		    if (Directory.Exists(BackupPath)) folderBrowserDialog1.SelectedPath = BackupPath;
 		    else folderBrowserDialog1.SelectedPath = Directory.GetCurrentDirectory();
 		  var dr=  folderBrowserDialog1.ShowDialog();
 		    if (dr == DialogResult.OK)
 		    {
-		        backupPath = folderBrowserDialog1.SelectedPath;
-		        Text=backupPath;
+		        BackupPath = folderBrowserDialog1.SelectedPath;
+		        Text=BackupPath;
 		    }
 		}
 
@@ -525,6 +570,7 @@ InitializeComponent();
             msg = msg.Replace('\u0003', ' ');
             //\u0001\u001f\u0001\u0003
             string[] strokes;
+            msg = from + ": " + msg;
             if (msg.Contains("\n"))
 	        {
 	            //разбитие на несколько строк
@@ -549,28 +595,28 @@ InitializeComponent();
         {
         	try
         	{
-        		if(String.IsNullOrWhiteSpace(backupPath)) 
+        		if(String.IsNullOrWhiteSpace(BackupPath)) 
         		{ClearLog();
         			InvokeLog("backup", "Не выбрана папка для резервной копии");
-                    HELP.BeepNotify();
+                    Help.BeepNotify();
         			return;
         		}
         		
-        		string nDB="2";
-        		string file="DB"+nDB+"CONF.CFG"; //local backup file
-        		backupPath=backupPath.TrimEnd('\\')+"\\";
-        		string dir=backupPath+CurrentDXC.info.sys_name+"\\"+DateTime.Now.ToShortDateString();
+        		string nDb="2";
+        		string file="DB"+nDb+"CONF.CFG"; //local backup file
+        		BackupPath=BackupPath.TrimEnd('\\')+"\\";
+        		string dir=BackupPath+CurrentDxc.Info.SysName+"\\"+DateTime.Now.ToShortDateString();
         		if(!Directory.Exists(dir))
           	Directory.CreateDirectory(dir);
            
             //ClearLog();
             //InvokeLog(DateTime.Now.ToShortTimeString()+"->backup","Сохранение базы на DXC");
            
-           CurrentDXC.backupPath=dir+"\\"+file;
+           CurrentDxc.BackupPath=dir+"\\"+file;
            // InvokeLog(DateTime.Now.ToShortTimeString()+"->backup","Копирование файла c DXC на ПК ");
-           CurrentDXC.MakeBackUp(nDB);
+           CurrentDxc.MakeBackUp(nDb);
           
-                  CurrentDXC.SaveToFile(Cfg);
+                  CurrentDxc.SaveToFile(Cfg);
         	}
         	
         	
@@ -588,17 +634,17 @@ InitializeComponent();
             string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             ClearLog();
    try {
-            	if(CurrentDXC.ReadInfoFromIP())
+            	if(CurrentDxc.ReadInfoFromIp())
             {
-            CurrentDXC.SaveToFile(Cfg);
-            InvokeLog("DXC dsp st sys",CurrentDXC.ToString());
+            CurrentDxc.SaveToFile(Cfg);
+            InvokeLog("DXC dsp st sys",CurrentDxc.ToString());
             }
             else 
-            	if(CurrentDXC.LoadFromFile(Cfg))
+            	if(CurrentDxc.LoadFromFile(Cfg))
             {
             	ClearLog();   
             	InvokeLog("DXC dsp st sys","Загружено c файла:");
-            	InvokeLog("",CurrentDXC.ToString());
+            	InvokeLog("",CurrentDxc.ToString());
 				
             } else 
             {
@@ -617,9 +663,9 @@ InitializeComponent();
         private void button3_Click(object sender, EventArgs e)
         {
         	//if(CurrentDXC || String.IsNullOrWhiteSpace(CurrentDXC.ip)) return;
-        		CurrentDXC.ReadAlarms(10);
-        		if(!checkBox1.Checked) DisplayAlarmsDGV(CurrentDXC.alarms);
-            else DisplayAlarmsDGV(CurrentDXC.GetCorrectedAlarms());
+        		CurrentDxc.ReadAlarms(10);
+        		if(!checkBox1.Checked) DisplayAlarmsDgv(CurrentDxc.Alarms);
+            else DisplayAlarmsDgv(CurrentDxc.GetCorrectedAlarms());
         }
         
         
@@ -629,25 +675,25 @@ InitializeComponent();
 		}
         void Button6Click(object sender, EventArgs e)
         {
-            HELP.BeepAlarmMajor();
+            Help.BeepAlarmMajor();
         }
         //запуск окна редактирования DXC
-        void СписокDXCToolStripMenuItemClick(object sender, EventArgs e)
+        void СписокDxcToolStripMenuItemClick(object sender, EventArgs e)
 		{
-			EditDXC editForm=new EditDXC(dxc_list);
+			EditDxc editForm=new EditDxc(DxcList);
 			DialogResult dr=editForm.ShowDialog();
 			if(dr!=DialogResult.OK) return;
-			dxc_list=editForm.listDXC;
-			ViewDXCNames(dxc_list);
+			DxcList=editForm.ListDxc;
+			ViewDxcNames(DxcList);
 			
 		}
 		
 		
-		public void ViewDXCNames(List<ClassDXC> list)
+		public void ViewDxcNames(List<ClassDxc> list)
 		{
 			lbAll.Items.Clear();
-			foreach (ClassDXC dxc in list) {
-				lbAll.Items.Add(dxc.custom_Name);				
+			foreach (ClassDxc dxc in list) {
+				lbAll.Items.Add(dxc.CustomName);				
 			}
 		}
 		
@@ -664,9 +710,9 @@ InitializeComponent();
 				MessageBox.Show("Неверное значение интервала");
 				return;
 			}
-			IntervalRequests=interv*1000;
-			timer1.Interval=IntervalRequests;
-			RemainMilisec=IntervalRequests;
+			_intervalRequests=interv*1000;
+			timer1.Interval=_intervalRequests;
+			_remainMilisec=_intervalRequests;
 			if(timer1.Enabled){ //уже запущен
 				SetMonitoring(false);//Останавливаем
 			}else{//пока остановлен
@@ -686,8 +732,8 @@ InitializeComponent();
 		void SetMonitoring(bool start){
 			if(start)//запуск
 			{
-              HELP.BeepRun();
-				button5.BackColor=MonitorButtonOnColor;				
+              Help.BeepRun();
+				button5.BackColor=_monitorButtonOnColor;				
 				button5.Text="Остановить мониторинг аварий";
 				lbProgress.Text="Ожидание опроса DXC:";
 				timer1.Start();
@@ -697,13 +743,13 @@ InitializeComponent();
             }
 			else//остановить
 			{
-                HELP.BeepStop();
+                Help.BeepStop();
 				timerProgress.Stop();
 				ProgressBar1.Value=0;
 				lbProgress.Text="Мониторинг аварий не активен";
 				timer1.Stop();
 				button5.Text="Запуск мониторинга аварий";
-				button5.BackColor=MonitorButtonOffColor; 
+				button5.BackColor=_monitorButtonOffColor; 
                 StopUpdateAlarmsThread();
 			}
 		}
@@ -715,16 +761,17 @@ InitializeComponent();
                 if (UpdateAlarmsThread != null && UpdateAlarmsThread.ThreadState == ThreadState.Running)
                     UpdateAlarmsThread.Abort();
             }
-            catch (Exception e)
+            catch (Exception)
             {
+                // ignored
             }
         }
 
         void CheckBox1CheckedChanged(object sender, EventArgs e)
 		{
-            HELP.BeepClick();
-			if(!checkBox1.Checked) DisplayAlarmsDGV(CurrentDXC.alarms);
-        	else DisplayAlarmsDGV(CurrentDXC.GetCorrectedAlarms());
+            Help.BeepClick();
+			if(!checkBox1.Checked) DisplayAlarmsDgv(CurrentDxc.Alarms);
+        	else DisplayAlarmsDgv(CurrentDxc.GetCorrectedAlarms());
 		}
 		public void DisableButtons()
 		{
@@ -755,39 +802,58 @@ InitializeComponent();
 		
 		void ToolStripMenuItem1Click(object sender, EventArgs e)
 		{
-			Offers OF=new Offers();
-			OF.ShowDialog();
+			Offers of=new Offers();
+			of.ShowDialog();
 		}
 
         //mute / unmute
         private void button7_Click(object sender, EventArgs e)
         {
-            if (HELP.SoundsOn) //Sounds ON
+            if (Help.SoundsOn) //Sounds ON
                 //Выключаем
             {
                 button7.FlatAppearance.BorderSize = 3;
                 button7.BackgroundImage = DXC.Properties.Resources.mute;
-                HELP.SoundsOn = false;
+                Help.SoundsOn = false;
             }
             else //Включаем  звуки
             {
                 button7.FlatAppearance.BorderSize = 0;
                 button7.BackgroundImage = DXC.Properties.Resources.umute;
-                HELP.SoundsOn = true;
+                Help.SoundsOn = true;
             }
         }
+        /// <summary>
+        /// Get port from selected item in listbox1 (selected port)
+        /// </summary>
+        /// <returns></returns>
+        private  Port GetPortFromSelectedItem()
+        {
+            try
+            {
+                if (listBox1.SelectedItems.Count == 0 || !listBox1.SelectedItem.ToString().Contains("Port")) return new Port();
 
+                Port portFromSelectedItem = new Port(listBox1.SelectedItem.ToString().Split('=')[1]);
+                return portFromSelectedItem;
+            }
+            catch(Exception)
+            {
+                return new Port();
+            }
+        }
         //просмотр свойств порта
         private void свойствоПортаToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (listBox1.SelectedItems.Count == 0 || !listBox1.SelectedItem.ToString().Contains("Port")) return;
-            
-                Port port = new Port(listBox1.SelectedItem.ToString().Split('=')[1]);
-                string text=File.ReadAllText("dspcon.txt");
-                port.Connections.ParseTextDSP_CON(text);
-                ViewPort vp=new ViewPort(port);
+                var portFromSelectedItem = GetPortFromSelectedItem();
+                portFromSelectedItem = CurrentDxc.DSP_CON(portFromSelectedItem.BordNumber, portFromSelectedItem.PortNumber);
+                ViewPort vp=new ViewPort(portFromSelectedItem);
                 vp.ShowDialog();
                 
+        }
+
+        private void toolStripTextBox1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

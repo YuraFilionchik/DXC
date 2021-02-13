@@ -8,9 +8,9 @@ namespace DXC
 public   static class Const
 {
     public static string DisplaySystem = "dsp st sys";
-        public static string UpdateDB(int N)
+        public static string UpdateDb(int n)
     {
-        return "upd db " + N.ToString();
+        return "upd db " + n.ToString();
     }
 
     
@@ -19,10 +19,10 @@ public   static class Const
 
     enum Verbs
     {
-        WILL = 251,
-        WONT = 252,
-        DO = 253,
-        DONT = 254,
-        IAC = 255
+        Will = 251,
+        Wont = 252,
+        Do = 253,
+        Dont = 254,
+        Iac = 255
     }
 }

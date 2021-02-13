@@ -8,70 +8,70 @@ namespace DXC
 {
    public class IniFile
     {
-        string Path; //Имя файла.
+        string _path; //Имя файла.
 
         [DllImport("kernel32", CharSet = CharSet.Unicode)] // Подключаем kernel32.dll и описываем его функцию WritePrivateProfilesString
-        static extern long WritePrivateProfileString(string Section, string Key, string Value, string FilePath);
+        static extern long WritePrivateProfileString(string section, string key, string value, string filePath);
 
         [DllImport("kernel32", CharSet = CharSet.Unicode)] // Еще раз подключаем kernel32.dll, а теперь описываем функцию GetPrivateProfileString
-        static extern int GetPrivateProfileString(string Section, string Key, string Default, StringBuilder RetVal, int Size, string FilePath);
+        static extern int GetPrivateProfileString(string section, string key, string @default, StringBuilder retVal, int size, string filePath);
 
         [DllImport("kernel32", CharSet = CharSet.Unicode )] // Еще раз подключаем kernel32.dll, а теперь описываем функцию GetPrivateProfileString
-        static extern int GetPrivateProfileString(string Section, string Key, string Default, IntPtr RetVal, int Size, string FilePath);
+        static extern int GetPrivateProfileString(string section, string key, string @default, IntPtr retVal, int size, string filePath);
 
      
-        public string[]  GetAllKeys(string Section)
+        public string[]  GetAllKeys(string section)
        {
-           IntPtr RetVal = Marshal.AllocHGlobal(4096 * sizeof(char));
+           IntPtr retVal = Marshal.AllocHGlobal(4096 * sizeof(char));
           // GetPrivateProfileString(Section, null, "", RetVal, 255, Path);
             string t = "";
             List<string> result = new List<string>();
-            int n = GetPrivateProfileString( Section, null, null, RetVal, 4096 * sizeof( char ), Path) - 1;
+            int n = GetPrivateProfileString( section, null, null, retVal, 4096 * sizeof( char ), _path) - 1;
             if ( n > 0 )
-                t = Marshal.PtrToStringUni( RetVal, n );
+                t = Marshal.PtrToStringUni( retVal, n );
  
-            Marshal.FreeHGlobal( RetVal );
+            Marshal.FreeHGlobal( retVal );
  
             return t.Split('\0' );
            
        }
 
         // С помощью конструктора записываем путь до файла и его имя.
-        public IniFile(string IniPath)
+        public IniFile(string iniPath)
         {
 
-            Path = new FileInfo(IniPath).FullName.ToString();
+            _path = new FileInfo(iniPath).FullName.ToString();
         }
 
         //Читаем ini-файл и возвращаем значение указного ключа из заданной секции.
-        public string ReadINI(string Section, string Key)
+        public string ReadIni(string section, string key)
         {
-            var RetVal = new StringBuilder(255);
-            GetPrivateProfileString(Section, Key, "", RetVal, 255, Path);
+            var retVal = new StringBuilder(255);
+            GetPrivateProfileString(section, key, "", retVal, 255, _path);
             
-                return RetVal.ToString();
+                return retVal.ToString();
         }
         //Записываем в ini-файл. Запись происходит в выбранную секцию в выбранный ключ.
-        public void Write(string Section, string Key, string Value)
+        public void Write(string section, string key, string value)
         {
            
-            WritePrivateProfileString(Section, Key, Value, Path);
+            WritePrivateProfileString(section, key, value, _path);
         }
 
         //Удаляем ключ из выбранной секции.
-        public void DeleteKey(string Key, string Section = null)
+        public void DeleteKey(string key, string section = null)
         {
-            Write(Section, Key, null);
+            Write(section, key, null);
         }
         //Удаляем выбранную секцию
-        public void DeleteSection(string Section = null)
+        public void DeleteSection(string section = null)
         {
-            Write(Section, null, null);
+            Write(section, null, null);
         }
         //Проверяем, есть ли такой ключ, в этой секции
-        public bool KeyExists(string Key, string Section = null)
+        public bool KeyExists(string key, string section = null)
         {
-            return ReadINI(Section, Key).Length > 0;
+            return ReadIni(section, key).Length > 0;
         }
     }
 }

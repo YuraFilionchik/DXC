@@ -18,26 +18,27 @@ namespace DXC
 	/// <summary>
 	/// Description of HELP.
 	/// </summary>
-	public  class HELP
+	public  class Help
 	{
-		public ListBox LB1;
+		public ListBox Lb1;
         public static bool SoundsOn = true;
-        private static string AlarmFileMajor = "sounds/notify.wav"; 
-        private static string AlarmFileMinor = "sounds/chimes.wav";
-        private static string NotifySoundFile = "sound/notify.wav";
-        private static string CloseAppFile = "sounds/close.wav";
-        private static string OpenAppFile = "sounds/open.wav";
-        private static string BackupOKFile = "sounds/Speech Sleep.wav";
-        private static string ClickFile = "sounds/Click.wav";
-        private static string DeniedFile1 = "sounds/denied1.wav";
-        private static string DeniedFile2 = "sounds/denied2.wav";
-        private static string ErrorFile1 = "sounds/error1.wav";
-        private static string RunFile = "sounds/Run.wav";
-        private static string StopFile = "sounds/Stop.wav";
+        private static string _alarmFileMajor = "sounds/notify.wav"; 
+        private static string _alarmFileMinor = "sounds/chimes.wav";
+        private static string _notifySoundFile = "sound/notify.wav";
+        private static string _closeAppFile = "sounds/close.wav";
+        private static string _openAppFile = "sounds/open.wav";
+        private static string _backupOkFile = "sounds/Speech Sleep.wav";
+        private static string _clickFile = "sounds/Click-80.wav";
+        private static string _clickFile2 = "sounds/Click.mp3";
+        private static string _deniedFile1 = "sounds/denied1.wav";
+        private static string _deniedFile2 = "sounds/denied2.wav";
+        private static string _errorFile1 = "sounds/error1.wav";
+        private static string _runFile = "sounds/Open.wav";
+        private static string _stopFile = "sounds/Stop.wav";
 
 
 
-		public HELP()
+		public Help()
 		{
 			
 		}
@@ -64,36 +65,36 @@ namespace DXC
         }
 
         public static void BeepRun()
-        { PlaySound(RunFile);}
+        { PlaySound(_runFile);}
         public static void BeepStop()
-        { PlaySound(StopFile); }
+        { PlaySound(_stopFile); }
         public static void BeepError()
         {
-            PlaySound(ErrorFile1);
+            PlaySound(_errorFile1);
         }
         public static void BeepDenied()
         {
-            if(DateTime.Now.Millisecond%2==0)PlaySound(DeniedFile1);
-            else PlaySound(DeniedFile2);
+            if(DateTime.Now.Millisecond%2==0)PlaySound(_deniedFile1);
+            else PlaySound(_deniedFile2);
         }
         public static void BeepClick()
         { 
-        	PlaySound(ClickFile);}
+        	PlaySound(_clickFile);}
 
         public static void BeepClose()
         {
-            PlaySound(CloseAppFile);
+            PlaySound(_closeAppFile);
         }
         public static void BeepOpen()
         {// PlaySound(OpenAppFile);
         }
-        public static void BeepBackupOK()
-        { PlaySound(BackupOKFile);}
+        public static void BeepBackupOk()
+        { PlaySound(_backupOkFile);}
         public static void BeepNotify()
         {
             new Thread(() =>
             {
-                PlaySound(NotifySoundFile);
+                PlaySound(_notifySoundFile);
             }).Start();
 
         }
@@ -127,7 +128,7 @@ namespace DXC
         {
             new Thread(() =>
             {
-                PlaySound(AlarmFileMinor);
+                PlaySound(_alarmFileMinor);
 
             }).Start();
 
@@ -148,17 +149,17 @@ namespace DXC
 	{
 		try {
 			for (int i = 0; i < list1.Count(); i++) {
-        		var A=list1[i];
+        		var a=list1[i];
         		//только активные в list1
-        	                   if(A.active && list2.Any(x=>x==A))//new alarms contains old Active alarm
+        	                   if(a.Active && list2.Any(x=>x==a))//new alarms contains old Active alarm
         	                  	{ 
-        	                  		var NewAlm=list2.First(x=>x==A); //авария в list2, которая есть и в list1
-        	                  		if( !NewAlm.active) //Закрываем старую аварию, если новая закрыта(неактивна)
+        	                  		var newAlm=list2.First(x=>x==a); //авария в list2, которая есть и в list1
+        	                  		if( !newAlm.Active) //Закрываем старую аварию, если новая закрыта(неактивна)
         	                  		{
-        	                  			A.End=NewAlm.End;
-        	                  			A.active=false; 
-        	                  			A.status=NewAlm.status;
-        	                  			list1[i]=A;
+        	                  			a.End=newAlm.End;
+        	                  			a.Active=false; 
+        	                  			a.Status=newAlm.Status;
+        	                  			list1[i]=a;
         	                  			
         	                  		}
         	                  	}

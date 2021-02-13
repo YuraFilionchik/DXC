@@ -21,21 +21,21 @@ using TFTPClient;
 
 
 namespace DXC
-{ public delegate void DXCEventHandler(string DXC_Name, string msg);
+{ public delegate void DxcEventHandler(string dxcName, string msg);
 	/// <summary>
 	/// Description of DXC.
 	/// </summary>
-	 public class ClassDXC
+	 public class ClassDxc
     {
-	 	public static string ttt;
-        public string ip;
-        public string custom_Name;
-        public string backupPath;
-        public List<Alarm> alarms;
-        public dxcinfo info;
+	 	public static string Ttt;
+        public string Ip;
+        public string CustomName;
+        public string BackupPath;
+        public List<Alarm> Alarms;
+        public Dxcinfo Info;
         public List<Port> Ports;
-        public event DXCEventHandler DXCEvent;
-		public TFTPSession _session; 
+        public event DxcEventHandler DxcEvent;
+		public TFTPSession Session; 
         public override string ToString()
         {
         	string portsString="";
@@ -44,39 +44,39 @@ namespace DXC
         	}
             return String.Format("ip={0}\nname={1}\nclock={2}\nDBnumber={3}\n" +
                                  "Installed modules:\n{4}\nПорты:\n{5}\ndate={6}\ntime={7}\nРазбежка времени: {8}дн\n {9}ч {10}мин {11}с", 
-                                 ip, info.sys_name, info.nodalclock, info.activeDBnuber,
-                                 info.ToString(),portsString, info.date.ToShortDateString(), 
-                                 info.time.ToLongTimeString(),(int)info.dt.TotalDays,
-                                info.dt.Hours,info.dt.Minutes, info.dt.Seconds);
+                                 Ip, Info.SysName, Info.Nodalclock, Info.ActiveDBnuber,
+                                 Info.ToString(),portsString, Info.Date.ToShortDateString(), 
+                                 Info.Time.ToLongTimeString(),(int)Info.Dt.TotalDays,
+                                Info.Dt.Hours,Info.Dt.Minutes, Info.Dt.Seconds);
         }
         //private IniFile Cfg;
-        public string buffer;
+        public string Buffer;
 
-        public ClassDXC(string ip)
+        public ClassDxc(string ip)
         {
             string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
-             _session = new TFTPSession();
+             Session = new TFTPSession();
             try
             {
-            	if(!MainForm.IPformat(ip))
+            	if(!MainForm.Pformat(ip))
             	{
             		MessageBox.Show("Неверный формат IP");
             		return;
             	}
-                buffer = "";
+                Buffer = "";
                 //Cfg=cfg;
-                this.ip = ip;
-                this.custom_Name="";
-                this.backupPath = "";
-                this.alarms = new List<Alarm>();
-                this.info=new dxcinfo(false);
+                this.Ip = ip;
+                this.CustomName="";
+                this.BackupPath = "";
+                this.Alarms = new List<Alarm>();
+                this.Info=new Dxcinfo(false);
                 this.Ports=new List<Port>();
                  
-                 _session.Connected += new TFTPSession.ConnectedHandler(_session_Connected);
-            _session.Transferring += new TFTPSession.TransferringHandler(_session_Transferring);
-            _session.TransferFailed += new TFTPSession.TransferFailedHandler(_session_TransferFailed);
-            _session.TransferFinished += new TFTPSession.TransferFinishedHandler(_session_TransferFinished);
-            _session.Disconnected += new TFTPSession.DisconnectedHandler(_session_Disconnected);
+                 Session.Connected += new TFTPSession.ConnectedHandler(_session_Connected);
+            Session.Transferring += new TFTPSession.TransferringHandler(_session_Transferring);
+            Session.TransferFailed += new TFTPSession.TransferFailedHandler(_session_TransferFailed);
+            Session.TransferFinished += new TFTPSession.TransferFinishedHandler(_session_TransferFinished);
+            Session.Disconnected += new TFTPSession.DisconnectedHandler(_session_Disconnected);
                 
             }
             catch (Exception exception)
@@ -92,10 +92,10 @@ namespace DXC
 		private void _session_Connected()
         {
 			MainForm.Instance.DisableButtons();
-			DXCEvent(this.info.sys_name,"TFTP "+ip+" connected");
+			DxcEvent(this.Info.SysName,"TFTP "+Ip+" connected");
         }
 
-        private void _session_Transferring(long BytesTransferred, long BytesTotal)
+        private void _session_Transferring(long bytesTransferred, long bytesTotal)
         {
             //if (BytesTotal != 0)
             {
@@ -106,21 +106,21 @@ namespace DXC
             	//DXCEvent(this.info.sys_name,".");
         }
 
-        private void _session_TransferFailed(short ErrorCode, string ErrorMessage)
+        private void _session_TransferFailed(short errorCode, string errorMessage)
         {
             //Console.WriteLine("Error {0}: {1}", ErrorCode, ErrorMessage);
-            DXCEvent(this.info.sys_name,"Error: "+ErrorMessage);
+            DxcEvent(this.Info.SysName,"Error: "+errorMessage);
         }
 
         private void _session_TransferFinished()
         {
-        	DXCEvent(this.info.sys_name,"Файл загружен "+this.backupPath);
+        	DxcEvent(this.Info.SysName,"Файл загружен "+this.BackupPath);
         }
 
         private void _session_Disconnected()
         {
             MainForm.Instance.EnableButtons();
-			DXCEvent(this.info.sys_name,"TFTP "+ip+" Disconnected");
+			DxcEvent(this.Info.SysName,"TFTP "+Ip+" Disconnected");
         } 
 #endregion
 
@@ -133,33 +133,33 @@ namespace DXC
             string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
-                if (cfg.KeyExists("backup", ip)) this.backupPath = cfg.ReadINI(ip, "backup");
-                if (cfg.KeyExists("name", ip)) this.info.sys_name = cfg.ReadINI(ip, "name");
-                if(cfg.KeyExists("TimeCorrection",ip)) this.info.dt=new TimeSpan(long.Parse(cfg.ReadINI(ip,"TimeCorrection")));
-                if (string.IsNullOrWhiteSpace(this.info.sys_name)) return false;
+                if (cfg.KeyExists("backup", Ip)) this.BackupPath = cfg.ReadIni(Ip, "backup");
+                if (cfg.KeyExists("name", Ip)) this.Info.SysName = cfg.ReadIni(Ip, "name");
+                if(cfg.KeyExists("TimeCorrection",Ip)) this.Info.Dt=new TimeSpan(long.Parse(cfg.ReadIni(Ip,"TimeCorrection")));
+                if (string.IsNullOrWhiteSpace(this.Info.SysName)) return false;
                 //load from file
-                if (!File.Exists(this.info.sys_name + ".txt")) return false;
-                var lines = File.ReadAllLines(this.info.sys_name + ".txt");
-                this.info.modules=new Dictionary<string, string>();
+                if (!File.Exists(this.Info.SysName + ".txt")) return false;
+                var lines = File.ReadAllLines(this.Info.SysName + ".txt");
+                this.Info.Modules=new Dictionary<string, string>();
                 foreach (string line in lines)
                 {
                     var values = line.Split('=');
                     if (values.Length < 2) continue;
-                    if (values[0] == "ip" && values[1] != this.ip)
+                    if (values[0] == "ip" && values[1] != this.Ip)
                     {
-                        MessageBox.Show("Несоответствие ip в файле " + values[1] + ". Файл " + this.info.sys_name + ".txt");
+                        MessageBox.Show("Несоответствие ip в файле " + values[1] + ". Файл " + this.Info.SysName + ".txt");
                         return false;
                     }
-                    if (values[0] == "name" && values[1] != this.info.sys_name)
+                    if (values[0] == "name" && values[1] != this.Info.SysName)
                     {
-                        MessageBox.Show("Несоответствие имени в файле: " + values[1] + ". Файл " + this.info.sys_name + ".txt");
+                        MessageBox.Show("Несоответствие имени в файле: " + values[1] + ". Файл " + this.Info.SysName + ".txt");
                         return false;
                     }
-                    if (values[0] == "clock") {this.info.nodalclock = values[1]; continue;}
-                    if (values[0] == "DBnumber") {this.info.activeDBnuber = values[1]; continue;}
+                    if (values[0] == "clock") {this.Info.Nodalclock = values[1]; continue;}
+                    if (values[0] == "DBnumber") {this.Info.ActiveDBnuber = values[1]; continue;}
                     if (values[0].Contains("slot"))
                     {
-                        this.info.modules.Add(values[0].Split('.')[1], values[1]);
+                        this.Info.Modules.Add(values[0].Split('.')[1], values[1]);
                         continue;
                     }
                     
@@ -171,14 +171,14 @@ namespace DXC
                      
                
                     
-                     if (values[0] == "date") {this.info.date = DateTime.Parse(values[1]); continue;}
-                     if (values[0] == "time") {this.info.time = DateTime.Parse(values[1]); continue;}
+                     if (values[0] == "date") {this.Info.Date = DateTime.Parse(values[1]); continue;}
+                     if (values[0] == "time") {this.Info.Time = DateTime.Parse(values[1]); continue;}
 					
 
                 }
                 if(this.Ports.Count==0) //try import from modules
                      {
-                     	foreach (var modul in info.modules) {
+                     	foreach (var modul in Info.Modules) {
                      		int b=int.Parse(modul.Key);
                      		if(!modul.Value.Contains("D8E1")) continue;
                      		for (int i = 1; i < 9; i++) {
@@ -209,13 +209,13 @@ namespace DXC
         	 string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
-            if(string.IsNullOrWhiteSpace(this.info.sys_name)) return;
-            cfg.Write(ip,"backup",this.backupPath);
-            cfg.Write(ip,"name",this.info.sys_name);
-            cfg.Write(ip,"Alarms_file",MainForm.GetAlarmsFilePath(this)); //имя файла с историей аварий DXC
-             cfg.Write(ip,"TimeCorrection",this.info.dt.Ticks.ToString());
+            if(string.IsNullOrWhiteSpace(this.Info.SysName)) return;
+            cfg.Write(Ip,"backup",this.BackupPath);
+            cfg.Write(Ip,"name",this.Info.SysName);
+            cfg.Write(Ip,"Alarms_file",MainForm.GetAlarmsFilePath(this)); //имя файла с историей аварий DXC
+             cfg.Write(Ip,"TimeCorrection",this.Info.Dt.Ticks.ToString());
              WriteAlarmsToFile(MainForm.GetAlarmsFilePath(this));
-             string file = this.info.sys_name + ".txt";
+             string file = this.Info.SysName + ".txt";
             File.WriteAllText(file, this.ToString());
 
             }
@@ -232,18 +232,18 @@ namespace DXC
 
         public override bool Equals(object obj)
         {
-            if (obj is ClassDXC)
-                return Equals((ClassDXC)obj); // use Equals method below
+            if (obj is ClassDxc)
+                return Equals((ClassDxc)obj); // use Equals method below
             else
                 return false;
         }
 
-        public bool Equals(ClassDXC other)
+        public bool Equals(ClassDxc other)
         {
         	//if(other==null) return false;
             // add comparisions for all members here
-            return (this.ip == other.ip &&
-                this.info == other.info );
+            return (this.Ip == other.Ip &&
+                this.Info == other.Info );
         }
 
 
@@ -259,14 +259,14 @@ namespace DXC
 //        }
         #endregion
 
-        public void UpdateDB(string Number)
+        public void UpdateDb(string number)
         {string methodName= new StackTrace(false).GetFrame(0).GetMethod().Name;
-            if(!IpPingOK(ip))
+            if(!IpPingOk(Ip))
             {
-                DXCEvent(this.custom_Name, this.ip + " адрес не доступен. Не удалось сохранить Backup!");
+                DxcEvent(this.CustomName, this.Ip + " адрес не доступен. Не удалось сохранить Backup!");
                 return;
             }
-        	TelnetConnection tc =new TelnetConnection(ip,23);
+        	TelnetConnection tc =new TelnetConnection(Ip,23);
             try
             {
                 //TelnetClient tc=new TelnetClient();
@@ -280,25 +280,25 @@ namespace DXC
                 //                    tc.Disconnect();
                 //                }
                 
-                string command="upd db "+Number;
+                string command="upd db "+number;
                 
-                DXCEvent(this.info.sys_name, "Открытие telnet "+ip);
+                DxcEvent(this.Info.SysName, "Открытие telnet "+Ip);
                 string ans = tc.Read();
              // DXCEvent(this.info.sys_name, "Успешно");
                 Thread.Sleep(200);
-                DXCEvent(this.info.sys_name, "Отправка команды "+command);
+                DxcEvent(this.Info.SysName, "Отправка команды "+command);
                tc.WriteLine(command);
                Thread.Sleep(2000);
-               DXCEvent(this.info.sys_name, "Успешно.");
+               DxcEvent(this.Info.SysName, "Успешно.");
                 tc.Close();
-                DXCEvent(this.info.sys_name, "Соединение закрыто.");
+                DxcEvent(this.Info.SysName, "Соединение закрыто.");
 
             }
             catch (Exception exception)
             {
             	if(tc.IsConnected){
             		tc.Close(); 
-                DXCEvent(this.info.sys_name, "Произошла ошибка. Соединение закрыто");
+                DxcEvent(this.Info.SysName, "Произошла ошибка. Соединение закрыто");
             	}
                 Log.WriteLog(methodName, exception.Message);
             }
@@ -322,7 +322,7 @@ namespace DXC
             
         }
 
-        public void template()
+        public void Template()
         {
             string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
@@ -336,15 +336,15 @@ namespace DXC
 
         }
 
-        private dxcinfo parseDXCInfo(string text)
+        private Dxcinfo ParseDxcInfo(string text)
         {
         	 string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
-        	 if (string.IsNullOrWhiteSpace(text)) return new dxcinfo();
-            dxcinfo info = new dxcinfo();
+        	 if (string.IsNullOrWhiteSpace(text)) return new Dxcinfo();
+            Dxcinfo info = new Dxcinfo();
             try
             {
             
-            info.modules = new Dictionary<string, string>();
+            info.Modules = new Dictionary<string, string>();
             text = text.Replace('\r', ' ');
             var lines = text.Split('\n');
 
@@ -356,36 +356,36 @@ namespace DXC
 
                 if (words.Length >= 6 && words[3].Contains("NAME"))
                 {
-                    info.sys_name = words[5]; //name
+                    info.SysName = words[5]; //name
                     continue;
                 }
                 if (words.Length >= 4 && words[1].Contains("CLOCK"))
                 {
-                    info.nodalclock = words[3]; //nodal clock
+                    info.Nodalclock = words[3]; //nodal clock
                     continue;
                 }
                 if (words.Length >= 9 && words[5].Contains("DATABASE") && words[6].Contains("NUMBER")) //DB number
                 {
-                    info.activeDBnuber = words[8];
+                    info.ActiveDBnuber = words[8];
                     continue;
                 }
                 if (words.Length >= 7 && words[0].Contains("I/O"))
                 {
                     var wordsNext = lines[i + 2].Split(' ').Where(s => !string.IsNullOrWhiteSpace(s)).ToArray(); ;
-                    info.modules.Add(words[2], wordsNext[2]);
-                    info.modules.Add(words[3], wordsNext[3]);
-                    info.modules.Add(words[4], wordsNext[4]);
-                    info.modules.Add(words[5], wordsNext[5]);
-                    info.modules.Add(words[6], wordsNext[6]);
+                    info.Modules.Add(words[2], wordsNext[2]);
+                    info.Modules.Add(words[3], wordsNext[3]);
+                    info.Modules.Add(words[4], wordsNext[4]);
+                    info.Modules.Add(words[5], wordsNext[5]);
+                    info.Modules.Add(words[6], wordsNext[6]);
                     continue;
                 }
                 if (words.Length >= 4 && words[0].Contains("TIME"))
                 {
-                    info.time = DateTime.ParseExact(words[1], "HH:mm:ss", null);
-                    info.date = DateTime.Parse(words[3]);
-                    DateTime fullDate=new DateTime(info.date.Year,info.date.Month,info.date.Day,
-                                                   info.time.Hour,info.time.Minute, info.time.Second);
-                    info.dt=fullDate-DateTime.Now; //установка разницы во времени оборудования DXC и данного ПК
+                    info.Time = DateTime.ParseExact(words[1], "HH:mm:ss", null);
+                    info.Date = DateTime.Parse(words[3]);
+                    DateTime fullDate=new DateTime(info.Date.Year,info.Date.Month,info.Date.Day,
+                                                   info.Time.Hour,info.Time.Minute, info.Time.Second);
+                    info.Dt=fullDate-DateTime.Now; //установка разницы во времени оборудования DXC и данного ПК
                 }
 
             }
@@ -400,10 +400,10 @@ namespace DXC
             }
 
         }
-        public void MakeBackUp(string N)
+        public void MakeBackUp(string n)
         {
         	//UpdateDB(N); //save conf to Db2 file on DXC
-        	CopyFileFromServer("DB"+N+"CONF.CFG",this.ip, this.backupPath);
+        	CopyFileFromServer("DB"+n+"CONF.CFG",this.Ip, this.BackupPath);
         	//Thread.Sleep(1000);
         }
         
@@ -416,49 +416,49 @@ namespace DXC
         	 string methodName= new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
-if(!IpPingOK(ip)) {
+if(!IpPingOk(Ip)) {
         		//MessageBox.Show(ip+" адрес не доступен");
-                DXCEvent(this.custom_Name, this.ip + " адрес не доступен");
+                DxcEvent(this.CustomName, this.Ip + " адрес не доступен");
         		return;
         	}
         	 List<Alarm> buffAlarms=new List<Alarm>();
-        	 TelnetConnection tc =new TelnetConnection(ip,23);
+        	 TelnetConnection tc =new TelnetConnection(Ip,23);
                 string ans = tc.Read();
-                buffer=ans;
+                Buffer=ans;
               Thread.Sleep(100);
                tc.WriteLine("dsp alm"); //запрос
                Thread.Sleep(200);//пауза
-               buffer=tc.Read(); //ответ. первый блок аварий
-               buffAlarms=parseAlarms(buffer); //аварии первого запроса
+               Buffer=tc.Read(); //ответ. первый блок аварий
+               buffAlarms=ParseAlarms(Buffer); //аварии первого запроса
                
-               if(alarms.Any(x=>buffAlarms.Any(b=>b==x && b.active==x.active)))
+               if(Alarms.Any(x=>buffAlarms.Any(b=>b==x && b.Active==x.Active)))
                {//в буфере уже есть хотябы одна авария из ранее считанных
-               	alarms=Program.Helper.MergeAlarms(alarms,buffAlarms);
+               	Alarms=Program.Helper.MergeAlarms(Alarms,buffAlarms);
                	 tc.Close(); 
                	return;
                }//повторяем пока не дойдем до существующей аварии или не достигнем счетчика
-               while (repeats>1 && !alarms.Any(x=>buffAlarms.Any(b=>b==x && b.active==x.active))) {
+               while (repeats>1 && !Alarms.Any(x=>buffAlarms.Any(b=>b==x && b.Active==x.Active))) {
                				
 				tc.Write(" ");				
 				Thread.Sleep(100);
-				buffer+=tc.Read(); //второй блок аварий
-				buffAlarms=Program.Helper.MergeAlarms(buffAlarms,parseAlarms(buffer));//объединяем считанные аварии с прошлыми
+				Buffer+=tc.Read(); //второй блок аварий
+				buffAlarms=Program.Helper.MergeAlarms(buffAlarms,ParseAlarms(Buffer));//объединяем считанные аварии с прошлыми
                repeats--;
                }
                 //вышли из цикла 
 
                 #region analyze new alarms and generate event for Beep
 
-                var diffAlarms = buffAlarms.Where(x => !alarms.Any(c => c == x));//only new alarms
+                var diffAlarms = buffAlarms.Where(x => !Alarms.Any(c => c == x));//only new alarms
                 if (diffAlarms.Any(x => this.Ports.Any(p => p.Monitored
-                                                            && p.BordNumber == x.bordNumber
-                                                            && p.PortNumber == x.portNumber)))
+                                                            && p.BordNumber == x.BordNumber
+                                                            && p.PortNumber == x.PortNumber)))
                 {//среди новых аварий есть аварии, принадлежащие порту с включенным мониторингом
-                    DXCEvent(this.custom_Name, "new alarms: "+diffAlarms.Count());
+                    DxcEvent(this.CustomName, "new alarms: "+diffAlarms.Count());
                 }
 
                     #endregion
-                alarms=Program.Helper.MergeAlarms(alarms,buffAlarms);
+                Alarms=Program.Helper.MergeAlarms(Alarms,buffAlarms);
                tc.Close(); 
             }
             catch (Exception exception)
@@ -484,22 +484,22 @@ if(!IpPingOK(ip)) {
         	var lines=File.ReadAllLines(file);
         	//read OldAlarms
         	foreach (string line in lines) {
-        		Alarm A=new Alarm(false);
-        		A.ParseLine(line);
-        		oldAlarms.Add(A);
+        		Alarm a=new Alarm(false);
+        		a.ParseLine(line);
+        		oldAlarms.Add(a);
         	}
         	
         	//поиск и закрытие отработанных аварий, которые в старых списках еще открыты
-        	var MergedAlarms=Program.Helper.MergeAlarms(oldAlarms,alarms.ToList());
+        	var mergedAlarms=Program.Helper.MergeAlarms(oldAlarms,Alarms.ToList());
 
         	File.WriteAllText(file,""); //обнулили файл
         	List<string> list=new List<string>();
-        	result=MergedAlarms.ConvertAll(x=>x.ExportLineCSV());
+        	result=mergedAlarms.ConvertAll(x=>x.ExportLineCsv());
         	
 
         	}//if file not exist
         	else {
-        		result=(alarms as List<Alarm>).ConvertAll(x=>x.ExportLineCSV());
+        		result=(Alarms as List<Alarm>).ConvertAll(x=>x.ExportLineCsv());
         	}
         	File.WriteAllLines(file, result.ToArray());
 }
@@ -531,7 +531,7 @@ if(!IpPingOK(ip)) {
         		}
         		//MessageBox.Show("dubles:"+w.ToString());
         		//DXCEvent(this.info.sys_name, "Загружено "+results.Count+" аварий из "+file);
-        		alarms=results;
+        		Alarms=results;
         		return results;
         	} catch (Exception ex) {
         		MessageBox.Show(ex.Message,"Reading alarms from file :"+file);
@@ -540,7 +540,7 @@ if(!IpPingOK(ip)) {
         }
         public List<Alarm> GetCorrectedAlarms()
         {
-        	return FixAlarmTime(alarms);
+        	return FixAlarmTime(Alarms);
         }
         /// <summary>
         /// Производит поправку времени аварий к времени на данном ПК (устраняет разброс времени на DXC and PC)
@@ -551,11 +551,11 @@ if(!IpPingOK(ip)) {
         { 
         	List<Alarm> correctedAlarms=new List<Alarm>();
         	foreach (Alarm alarm in alarms) {
-        		var Alm=alarm.GetCopyAlarm();
-        		Alm.Start-=info.dt;
-        		Alm.End-=info.dt;
+        		var alm=alarm.GetCopyAlarm();
+        		alm.Start-=Info.Dt;
+        		alm.End-=Info.Dt;
         		
-        		correctedAlarms.Add(Alm);
+        		correctedAlarms.Add(alm);
         	}
         	return correctedAlarms;
         }
@@ -565,22 +565,22 @@ if(!IpPingOK(ip)) {
         /// </summary>
         /// <param name="file"></param>
         /// <param name="ip"></param>
-        /// <param name="DestFile"></param>
-        private void CopyFileFromServer(string file, string ip, string DestFile)
+        /// <param name="destFile"></param>
+        private void CopyFileFromServer(string file, string ip, string destFile)
        {
-        	if(!IpPingOK(ip)) {
+        	if(!IpPingOk(ip)) {
         		MessageBox.Show(ip+" адрес не доступен");
-                DXCEvent(this.custom_Name, this.ip + " адрес не доступен");
+                DxcEvent(this.CustomName, this.Ip + " адрес не доступен");
                 return;
         	}
         	try {
    
       		TransferOptions tOptions = new TransferOptions();            
-            tOptions.LocalFilename = DestFile;
+            tOptions.LocalFilename = destFile;
             tOptions.RemoteFilename = file;
             tOptions.Host = ip;
             tOptions.Action = TransferType.Get;
-            _session.Get(tOptions);
+            Session.Get(tOptions);
    
         	} catch (Exception ex) {
         		MessageBox.Show(ex.Message,"copy from server");
@@ -605,10 +605,10 @@ if(!IpPingOK(ip)) {
 //        
        
         }
-        private void SaveStreamToFile(Stream stream, string DestFile)
+        private void SaveStreamToFile(Stream stream, string destFile)
         {
         	try {
-        		FileStream fs=new FileStream(DestFile,FileMode.Create);
+        		FileStream fs=new FileStream(destFile,FileMode.Create);
             stream.CopyTo(fs);
             StreamReader sr=new StreamReader(stream);
             MessageBox.Show(sr.ReadToEnd());
@@ -637,29 +637,29 @@ if(!IpPingOK(ip)) {
 //        	Log.WriteLog("",error.ToString());
 //        	 TransferFinishedEvent.Set();
 //        }
-        public bool ReadInfoFromIP()
+        public bool ReadInfoFromIp()
         {
         string methodName= new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
-                if (!IpPingOK(ip))
+                if (!IpPingOk(Ip))
                 {
                    // MessageBox.Show("Адрес "+ip+" не доступен.");
-                    DXCEvent(this.custom_Name, this.ip + " адрес не доступен");
+                    DxcEvent(this.CustomName, this.Ip + " адрес не доступен");
                     return false;
                 }
-                TelnetConnection tc =new TelnetConnection(ip,23);
+                TelnetConnection tc =new TelnetConnection(Ip,23);
                 string ans = tc.Read();
-                buffer=ans;
+                Buffer=ans;
                // Program.MF.InvokeLog(methodName, ans);
                 Thread.Sleep(100);
                tc.WriteLine("dsp st sys");
                
                Thread.Sleep(1000);
-               buffer=tc.Read();
+               Buffer=tc.Read();
                //   Thread.Sleep(3000);
                // Program.MF.InvokeLog(methodName, buffer);
-                info=parseDXCInfo(buffer);
+                Info=ParseDxcInfo(Buffer);
                 tc.Close();
                 return true;
             }
@@ -670,15 +670,17 @@ if(!IpPingOK(ip)) {
                 return false;
             }
         }
+
+
 /// <summary>
 /// Парсинг аварий из выдачи команды dsp alm 
 /// </summary>
 /// <param name="buffer"></param>
 /// <returns></returns>
-	public static List<Alarm> parseAlarms(string buffer)
+	public static List<Alarm> ParseAlarms(string buffer)
 		{
 		string dateTimeLine="";
-		string Line="";
+		string Line="";//for debugging
 			List<Alarm> list=new List<Alarm>();
 			if(String.IsNullOrWhiteSpace(buffer)) return list;
 			try {
@@ -687,49 +689,52 @@ if(!IpPingOK(ip)) {
 			{//по факту перебор строк идет с конца хронологии событий,
 				//т.е. сначала конец события, а потом только начало в следующих строках
 				if(String.IsNullOrWhiteSpace(line)) continue;
+                Line = line;
 				var words=Split(line,"  ");//2 spaces
 				if(!words[0].Contains("IO-")) continue;
-				Alarm alm=new Alarm(false);
-				#region initialize
-				alm.Start=new DateTime(1000,1,1);
-				alm.End=new DateTime(1000,1,1);
-				alm.portNumber=0;
-				alm.bordNumber=0;
-				#endregion
-				alm.io=words[0]; 
-				var subs=alm.io.Split('-');
+                    Alarm alm = new Alarm(false)
+                    {
+                        #region initialize
+                        Start = new DateTime(1000, 1, 1),
+                        End = new DateTime(1000, 1, 1),
+                        PortNumber = 0,
+                        BordNumber = 0,
+                        #endregion
+                        Io = words[0]
+                    };
+                    var subs=alm.Io.Split('-');
 				var b=subs[1].Split(':')[0].Trim();
 				var p=subs[1].Split(':')[1].Trim();
 int nb=0;
 int np=0;
 				int.TryParse(b, out nb);
 				int.TryParse(p, out np);
-				alm.bordNumber=nb;
-				alm.portNumber=np;
-				alm.name=words[1];//TODO check Parse
-				alm.status=words[2].Trim();
+				alm.BordNumber=nb;
+				alm.PortNumber=np;
+				alm.Name=words[1];
+				alm.Status=words[2].Trim();
 				dateTimeLine=words[3];//for debugging
 				var dateTime=DateTime.Parse(dateTimeLine.Trim('\a'));//.Split(' ')[0]);
 				#region Start End DateTime
-				if(alm.status=="EVENT")
+				if(alm.Status=="EVENT")
 					alm.Start=alm.End=dateTime;
-				else if(alm.status=="OFF") 
+				else if(alm.Status=="OFF") 
 				{   alm.End=dateTime;
-					alm.active=false;
+					alm.Active=false;
 				}
 				else { //Начало события. Ищем, была ли эта авария ранее в списке с OFF)
-					int ind=list.FindIndex(x=>x.bordNumber==alm.bordNumber &&
-					           x.portNumber==alm.portNumber &&
-					           x.name==alm.name &&
+					int ind=list.FindIndex(x=>x.BordNumber==alm.BordNumber &&
+					           x.PortNumber==alm.PortNumber &&
+					           x.Name==alm.Name &&
 					           x.Start==new DateTime(1000,1,1));
 					if(ind>=0)//есть авария с таким именем, портом и без даты начала
-					{Alarm A=list[ind]; //End уже должно быть, авария закрыта
-					A.Start=dateTime;
-					list[ind]=A;
+					{Alarm a=list[ind]; //End уже должно быть, авария закрыта
+					a.Start=dateTime;
+					list[ind]=a;
 					continue;
 					}else {
 						alm.Start=dateTime;
-						alm.active=true;
+						alm.Active=true;
 					}
 				}
 				#endregion
@@ -747,7 +752,7 @@ int np=0;
 				return list;
 			}
 		}
- public static bool IpPingOK(string ip)
+ public static bool IpPingOk(string ip)
     {
     	Ping p = new Ping();
 				if (p.Send(ip).Status == IPStatus.Success)
@@ -782,6 +787,40 @@ int np=0;
  	}
  	return result;
  }
- 
+
+ public Port DSP_CON(int bord,int port)
+ {
+     string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
+     var PORT = this.Ports.FirstOrDefault(x => x.BordNumber == bord && x.PortNumber == port);
+            try
+     {
+         if (!IpPingOk(Ip))
+         {
+             // MessageBox.Show("Адрес "+ip+" не доступен.");
+             DxcEvent(this.CustomName, this.Ip + " адрес не доступен");
+             return PORT;
+         }
+
+        
+         TelnetConnection tc = new TelnetConnection(Ip, 23);
+         string ans = tc.Read();
+         Buffer = ans;
+         Thread.Sleep(100);
+         tc.WriteLine(String.Format("dsp con {0} {1}",bord,port));
+
+        // Thread.Sleep(500);
+         Buffer = tc.Read();
+         if(!String.IsNullOrWhiteSpace(Buffer))
+         PORT.Connections.ParseTextDSP_CON(Buffer);
+         tc.Close();
+         return PORT;
+     }
+     catch (Exception exception)
+     {
+         //Program.MF.InvokeLog(methodName, exception.Message);
+         Log.WriteLog(methodName, exception.Message+"buffer: "+Buffer);
+         return PORT;
+     }
+ }
     }
 }

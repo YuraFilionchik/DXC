@@ -17,12 +17,12 @@ namespace DXC
 	/// <summary>
 	/// Description of EditDXC.
 	/// </summary>
-	public partial class EditDXC : Form
+	public partial class EditDxc : Form
 	{
-		public List<ClassDXC> listDXC=new List<ClassDXC>();
-		ClassDXC SelectedDXC;
-		AddDXC AddForm=new AddDXC();
-		public EditDXC()
+		public List<ClassDxc> ListDxc=new List<ClassDxc>();
+		ClassDxc _selectedDxc;
+		AddDxc _addForm=new AddDxc();
+		public EditDxc()
 		{
 			InitializeComponent();		
 			comboBox1.SelectedIndexChanged+= new EventHandler(comboBox1_SelectedIndexChanged);
@@ -58,8 +58,8 @@ namespace DXC
 		{
 			string selItem=comboBox1.SelectedItem.ToString();
 			if(string.IsNullOrWhiteSpace(selItem)) return;
-			SelectedDXC=listDXC.FirstOrDefault(x=>x.ip==selItem);
-			bindingSource1.DataSource=SelectedDXC.Ports;
+			_selectedDxc=ListDxc.FirstOrDefault(x=>x.Ip==selItem);
+			bindingSource1.DataSource=_selectedDxc.Ports;
 			dataGridView1.DataSource=bindingSource1;
 //Порты
 //dataGridView1.Rows.Clear();
@@ -69,28 +69,28 @@ namespace DXC
 //}
 
 //Other textboxes
-tbName.Text=SelectedDXC.custom_Name;
-tbSysName.Text=SelectedDXC.info.sys_name;
-tbIP.Text=SelectedDXC.ip;
-tbSYNC.Text=SelectedDXC.info.nodalclock;
-tbBackup.Text=SelectedDXC.backupPath;
+tbName.Text=_selectedDxc.CustomName;
+tbSysName.Text=_selectedDxc.Info.SysName;
+tbIP.Text=_selectedDxc.Ip;
+tbSYNC.Text=_selectedDxc.Info.Nodalclock;
+tbBackup.Text=_selectedDxc.BackupPath;
 			
 		}
 		
-		public EditDXC(List<ClassDXC> list)
+		public EditDxc(List<ClassDxc> list)
 		{
 			InitializeComponent();
-			SelectedDXC=new ClassDXC("1.1.1.1");
+			_selectedDxc=new ClassDxc("1.1.1.1");
 			
 			
 			this.Load+= new EventHandler(EditDXC_Load);
 			comboBox1.SelectedIndexChanged+= new EventHandler(comboBox1_SelectedIndexChanged);
 			
-			listDXC=list;
+			ListDxc=list;
 			if (!list.Any()) return;
 			string[] ips=new string[list.Count];
 			for (int i = 0; i < list.Count; i++) {
-				ips[i]=listDXC[i].ip;
+				ips[i]=ListDxc[i].Ip;
 			}
 			comboBox1.Items.AddRange(ips);
 			if(ips.Count()>0) comboBox1.SelectedIndex=0;
@@ -103,22 +103,22 @@ tbBackup.Text=SelectedDXC.backupPath;
 		
 		}
 		
-		void BtAddDXCClick(object sender, EventArgs e)
+		void BtAddDxcClick(object sender, EventArgs e)
 		{
 			
-			DialogResult dr= AddForm.ShowDialog();
+			DialogResult dr= _addForm.ShowDialog();
 			if(dr!=DialogResult.OK) return;
-			ClassDXC newDxc=new ClassDXC(AddForm.IP);
-			newDxc.custom_Name=AddForm.DXCName;
-		if(listDXC.Any(x=>x.custom_Name==newDxc.custom_Name)) {
-				MessageBox.Show(" Имя "+ newDxc.custom_Name+" уже существует у  IP: "+
-				                listDXC.Find(x=>x.custom_Name==newDxc.custom_Name).ip);
+			ClassDxc newDxc=new ClassDxc(_addForm.Ip);
+			newDxc.CustomName=_addForm.DxcName;
+		if(ListDxc.Any(x=>x.CustomName==newDxc.CustomName)) {
+				MessageBox.Show(" Имя "+ newDxc.CustomName+" уже существует у  IP: "+
+				                ListDxc.Find(x=>x.CustomName==newDxc.CustomName).Ip);
 				return;
 			}
 			//check Existing
-			if (listDXC.All(x => x.ip != newDxc.ip))
-				listDXC.Add(newDxc); else 
-				{MessageBox.Show(" IP адресс "+newDxc.ip+" уже существует.");
+			if (ListDxc.All(x => x.Ip != newDxc.Ip))
+				ListDxc.Add(newDxc); else 
+				{MessageBox.Show(" IP адресс "+newDxc.Ip+" уже существует.");
 					return;
 				}
 			ViewIPinCombo();
@@ -128,9 +128,9 @@ tbBackup.Text=SelectedDXC.backupPath;
 		/// </summary>
 		private void ViewIPinCombo()
 		{
-			string[] ips=new string[listDXC.Count];
-			for (int i = 0; i < listDXC.Count; i++) {
-				ips[i]=listDXC[i].ip;
+			string[] ips=new string[ListDxc.Count];
+			for (int i = 0; i < ListDxc.Count; i++) {
+				ips[i]=ListDxc[i].Ip;
 			}
 			comboBox1.Items.Clear();
 			comboBox1.Items.AddRange(ips);
@@ -144,7 +144,7 @@ tbBackup.Text=SelectedDXC.backupPath;
 		//Сохранить
 		void Button1Click(object sender, EventArgs e)
 		{
-			foreach (ClassDXC dxc in listDXC) {
+			foreach (ClassDxc dxc in ListDxc) {
 				dxc.SaveToFile(MainForm.Instance.Cfg);
 			}
 			DialogResult=DialogResult.OK;
@@ -155,12 +155,12 @@ tbBackup.Text=SelectedDXC.backupPath;
 		void TbNameTextChanged(object sender, EventArgs e)
 		{
 			if(String.IsNullOrWhiteSpace(tbName.Text)) return;
-			if(listDXC.All(x=>x.custom_Name!=tbName.Text))
+			if(ListDxc.All(x=>x.CustomName!=tbName.Text))
 			{
-				SelectedDXC.custom_Name=tbName.Text;
+				_selectedDxc.CustomName=tbName.Text;
 				lbInfo.Text="";
-			}else if(tbName.Text!=SelectedDXC.custom_Name)
-				lbInfo.Text="Такое имя уже занято у "+listDXC.First(x=>x.custom_Name==tbName.Text).info.sys_name;
+			}else if(tbName.Text!=_selectedDxc.CustomName)
+				lbInfo.Text="Такое имя уже занято у "+ListDxc.First(x=>x.CustomName==tbName.Text).Info.SysName;
 			
 		}
 	}

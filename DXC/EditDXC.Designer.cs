@@ -8,7 +8,7 @@
  */
 namespace DXC
 {
-	partial class EditDXC
+	partial class EditDxc
 	{
 		/// <summary>
 		/// Designer variable used to keep track of non-visual components.
@@ -80,7 +80,7 @@ namespace DXC
 			this.btAddDXC.TabIndex = 1;
 			this.btAddDXC.Text = "Добавить новое DXC";
 			this.btAddDXC.UseVisualStyleBackColor = true;
-			this.btAddDXC.Click += new System.EventHandler(this.BtAddDXCClick);
+			this.btAddDXC.Click += new System.EventHandler(this.BtAddDxcClick);
 			// 
 			// button1
 			// 
@@ -292,7 +292,7 @@ namespace DXC
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.btAddDXC);
 			this.Controls.Add(this.comboBox1);
-			this.Name = "EditDXC";
+			this.Name = "EditDxc";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "EditDXC";
 			((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();

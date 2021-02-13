@@ -80,7 +80,7 @@ namespace DXC
 			this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.Name = "Offers";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-			this.Text = "Пишите сюда предложения по программе";
+			base.Text = "Пишите сюда предложения по программе";
 			this.ResumeLayout(false);
 		}
 		private System.Windows.Forms.Button button1;

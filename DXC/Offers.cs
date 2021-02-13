@@ -18,16 +18,16 @@ namespace DXC
 	/// </summary>
 	public partial class Offers : Form
 	{
-		public string text;
-		private const string file="offers.txt";
+		public string Content;
+		private const string File="offers.txt";
 		public Offers()
 		{
 			
 			InitializeComponent();
 			
-			if(!File.Exists(file)) text="";
-			else text=File.ReadAllText(file);
-			richTextBox1.Text=text;
+			if(!System.IO.File.Exists(File)) Content="";
+			else Content=System.IO.File.ReadAllText(File);
+			richTextBox1.Text=Content;
 			this.Closing+= new System.ComponentModel.CancelEventHandler(Offers_Closing);
 		}
 		
@@ -36,8 +36,8 @@ namespace DXC
 		void Offers_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
 		
-			text=richTextBox1.Text;
-			File.WriteAllText(file,richTextBox1.Text);
+			Content=richTextBox1.Text;
+			System.IO.File.WriteAllText(File,richTextBox1.Text);
 		}
 		
 		void Button1Click(object sender, EventArgs e)

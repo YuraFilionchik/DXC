@@ -18,7 +18,7 @@ namespace DXC
     internal sealed class Program
     {
        // public static MainForm MF;
-       public static HELP   Helper =new HELP();
+       public static Help   Helper =new Help();
         
         /// <summary>
         /// Program entry point.
