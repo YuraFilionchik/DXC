@@ -36,6 +36,9 @@ namespace DXC
 		     
 		     
 		 }
+		 
+		 public List<Alarm> GetAlarmsFromInterval(DateTime from, DateTime to)
+		 {}
 	}
 	
 	
