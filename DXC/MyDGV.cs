@@ -14,10 +14,32 @@ namespace DXC
 	/// <summary>
 	/// Description of MyDGV.
 	/// </summary>
-	public class MyDGV:DataGridView
+	public class DataStorage
 	{
-		public MyDGV()
+	    private ClassDxc dxc;
+	    public string fileDxc{
+	        get{
+	            if(dxc!=null && dxc.Info!=null)
+	        return dxc.Info.SysName+".txt";
+	        else return "";
+	    }
+	        
+	    }
+	    
+		public DataStorage(ClassDxc dxc)
 		{
+		    dxc=dxc;
 		}
+		
+		public void SaveAlarms()
+		 {
+		     
+		     
+		 }
+		 
+		 public List<Alarm> GetAlarmsFromInterval(DateTime from, DateTime to)
+		 {}
 	}
+	
+	
 }
