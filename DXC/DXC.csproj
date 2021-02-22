@@ -80,6 +80,7 @@
     </Compile>
     <Compile Include="Const.cs" />
     <Compile Include="DataReceivedEventArgs.cs" />
+    <Compile Include="DataStorage.cs" />
     <Compile Include="DXC.cs" />
     <Compile Include="EditDXC.cs">
       <SubType>Form</SubType>

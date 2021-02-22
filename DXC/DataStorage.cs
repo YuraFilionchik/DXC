@@ -7,6 +7,7 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace DXC
@@ -29,6 +30,7 @@ namespace DXC
 		public DataStorage(ClassDxc dxc)
 		{
 		    dxc=dxc;
+			
 		}
 		
 		public void SaveAlarms()
@@ -37,8 +39,29 @@ namespace DXC
 		     
 		 }
 		 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="from"></param>
+		/// <param name="to"></param>
+		/// <returns></returns>
 		 public List<Alarm> GetAlarmsFromInterval(DateTime from, DateTime to)
-		 {}
+		 {
+			List<Alarm> listAlarms = new List<Alarm>();
+
+
+			return listAlarms;
+		}
+
+		/// <summary>
+		/// Сохраняет указанные аварии в файл. Если файл существует, то уже записанные аварии объединяются.
+		/// </summary>
+		/// <param name="alarms">Аварии для сохранения</param>
+		/// <param name="file"></param>
+		private void WriteAlarmsToFile(IEnumerable<Alarm> alarms, string file)
+        {
+
+        }
 	}
 	
 	
