@@ -407,66 +407,7 @@ namespace DXC
         	//Thread.Sleep(1000);
         }
         
-       /// <summary>
-       /// Чтение аварий через telnet и заполнение списка аварий 
-       /// </summary>
-       /// <param name="repeats">Количество повторов dsp alm</param>
-        public void ReadAlarms(int repeats)
-        {
-        	 string methodName= new StackTrace(false).GetFrame(0).GetMethod().Name;
-            try
-            {
-if(!IpPingOk(Ip)) {
-        		//MessageBox.Show(ip+" адрес не доступен");
-                DxcEvent(this.CustomName, this.Ip + " адрес не доступен");
-        		return;
-        	}
-        	 List<Alarm> buffAlarms=new List<Alarm>();
-        	 TelnetConnection tc =new TelnetConnection(Ip,23);
-                string ans = tc.Read();
-                Buffer=ans;
-              Thread.Sleep(100);
-               tc.WriteLine("dsp alm"); //запрос
-               Thread.Sleep(200);//пауза
-               Buffer=tc.Read(); //ответ. первый блок аварий
-               buffAlarms=ParseAlarms(Buffer); //аварии первого запроса
-               
-               if(Alarms.Any(x=>buffAlarms.Any(b=>b==x && b.Active==x.Active)))
-               {//в буфере уже есть хотябы одна авария из ранее считанных
-               	Alarms=Program.Helper.MergeAlarms(Alarms,buffAlarms);
-               	 tc.Close(); 
-               	return;
-               }//повторяем пока не дойдем до существующей аварии или не достигнем счетчика
-               while (repeats>1 && !Alarms.Any(x=>buffAlarms.Any(b=>b==x && b.Active==x.Active))) {
-               				
-				tc.Write(" ");				
-				Thread.Sleep(100);
-				Buffer+=tc.Read(); //второй блок аварий
-				buffAlarms=Program.Helper.MergeAlarms(buffAlarms,ParseAlarms(Buffer));//объединяем считанные аварии с прошлыми
-               repeats--;
-               }
-                //вышли из цикла 
 
-                #region analyze new alarms and generate event for Beep
-
-                var diffAlarms = buffAlarms.Where(x => !Alarms.Any(c => c == x));//only new alarms
-                if (diffAlarms.Any(x => this.Ports.Any(p => p.Monitored
-                                                            && p.BordNumber == x.BordNumber
-                                                            && p.PortNumber == x.PortNumber)))
-                {//среди новых аварий есть аварии, принадлежащие порту с включенным мониторингом
-                    DxcEvent(this.CustomName, "new alarms: "+diffAlarms.Count());
-                }
-
-                    #endregion
-                Alarms=Program.Helper.MergeAlarms(Alarms,buffAlarms);
-               tc.Close(); 
-            }
-            catch (Exception exception)
-            {
-                Log.WriteLog(methodName, exception.Message);
-            }
-        	
-        }
         
         /// <summary>
          /// Запись аварий в файл
@@ -641,11 +582,12 @@ if(!IpPingOk(Ip)) {
         {
         string methodName= new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
-            {
+            {DxcEvent("system", "tcp-opened");
                 if (!IpPingOk(Ip))
                 {
                    // MessageBox.Show("Адрес "+ip+" не доступен.");
                     DxcEvent(this.CustomName, this.Ip + " адрес не доступен");
+                    DxcEvent("system", "tcp-closed");
                     return false;
                 }
                 TelnetConnection tc =new TelnetConnection(Ip,23);
@@ -654,23 +596,107 @@ if(!IpPingOk(Ip)) {
                // Program.MF.InvokeLog(methodName, ans);
                 Thread.Sleep(100);
                tc.WriteLine("dsp st sys");
+               bool readed=false;
+               while (!readed) {//ответ. первый блок аварий
+               	Thread.Sleep(100);//пауза
+               	var b=tc.Read();
+               	Buffer+=b; //накапливаем ответ команды
+               	if(String.IsNullOrEmpty(b)) readed=true; //ждём когда закончится чтение
+               }
                
-               Thread.Sleep(1000);
-               Buffer=tc.Read();
-               //   Thread.Sleep(3000);
-               // Program.MF.InvokeLog(methodName, buffer);
                 Info=ParseDxcInfo(Buffer);
                 tc.Close();
+                DxcEvent("system", "tcp-closed");
                 return true;
             }
             catch (Exception exception)
             {
                 //Program.MF.InvokeLog(methodName, exception.Message);
                 Log.WriteLog(methodName, exception.Message);
+                DxcEvent("system", "tcp-closed");
                 return false;
             }
         }
+       /// <summary>
+       /// Чтение аварий через telnet и заполнение списка аварий 
+       /// </summary>
+       /// <param name="repeats">Количество повторов dsp alm</param>
+        public void ReadAlarms(int repeats)
+        {
+        	 string methodName= new StackTrace(false).GetFrame(0).GetMethod().Name;
+            try
+            {
+            	 DxcEvent("system", "tcp-opened");
+if(!IpPingOk(Ip)) {
+        		//MessageBox.Show(ip+" адрес не доступен");
+                DxcEvent(this.CustomName, this.Ip + " адрес не доступен");
+                 DxcEvent("system", "tcp-closed");
+        		return;
+        	}
+        	 List<Alarm> buffAlarms=new List<Alarm>();
+        	 TelnetConnection tc =new TelnetConnection(Ip,23);
+                string ans = tc.Read();
+                Buffer="";
+              Thread.Sleep(100);
+               tc.WriteLine("dsp alm"); //запрос
+               Thread.Sleep(200);//пауза
+               bool readed=false;
+               while (!readed) {
+               	var b0=tc.Read();
+               	Thread.Sleep(200);//пауза
+               	Buffer+=b0; //ответ. первый блок аварий
+               	if(String.IsNullOrEmpty(b0)) readed=true;
+               }
+                             
+               buffAlarms=ParseAlarms(Buffer); //аварии первого запроса
+               
+               if(Alarms.Any(x=>buffAlarms.Any(b=>b==x && b.Active==x.Active)))
+               {//в буфере уже есть хотябы одна авария из ранее считанных
+               	Alarms=Program.Helper.MergeAlarms(Alarms,buffAlarms);
+               	 tc.Close(); 
+               	 DxcEvent("system", "tcp-closed");
+               	return;
+               }//повторяем пока не дойдем до существующей аварии или не достигнем счетчика
+               while (repeats>1 && !Alarms.Any(x=>buffAlarms.Any(b=>b==x && b.Active==x.Active))) 
+               {
+               	tc.Write(" ");				
+				Thread.Sleep(100);
+               	bool endread=false;
+				Buffer="";
+               while (!endread) 
+               {
+               	var b0=tc.Read();
+               	Thread.Sleep(100);//пауза
+               	Buffer+=b0; //ответ. первый блок аварий
+               	if(String.IsNullOrEmpty(b0)) endread=true;
+               }			
+				buffAlarms=Program.Helper.MergeAlarms(buffAlarms,ParseAlarms(Buffer));//объединяем считанные аварии с прошлыми
+               repeats--;
+               }
+                //вышли из цикла 
 
+                #region analyze new alarms and generate event for Beep
+
+                var diffAlarms = buffAlarms.Where(x => !Alarms.Any(c => c == x));//only new alarms
+                if (diffAlarms.Any(x => this.Ports.Any(p => p.Monitored
+                                                            && p.BordNumber == x.BordNumber
+                                                            && p.PortNumber == x.PortNumber)))
+                {//среди новых аварий есть аварии, принадлежащие порту с включенным мониторингом
+                    DxcEvent(this.CustomName, "new alarms: "+diffAlarms.Count());
+                }
+
+                    #endregion
+                Alarms=Program.Helper.MergeAlarms(Alarms,buffAlarms);
+               tc.Close(); 
+               DxcEvent("system", "tcp-closed");
+            }
+            catch (Exception exception)
+            {
+                Log.WriteLog(methodName, exception.Message);
+                DxcEvent("system", "tcp-closed");
+            }
+        	
+        }
 
 /// <summary>
 /// Парсинг аварий из выдачи команды dsp alm 
@@ -808,8 +834,9 @@ int np=0;
          Thread.Sleep(100);
          tc.WriteLine(String.Format("dsp con {0} {1}",bord,port));
 
-        // Thread.Sleep(500);
+         Thread.Sleep(1500);
          Buffer = tc.Read();
+         //Thread.Sleep(500);
          if(!String.IsNullOrWhiteSpace(Buffer))
          PORT.Connections.ParseTextDSP_CON(Buffer);
          tc.Close();

@@ -185,6 +185,13 @@ InitializeComponent();
                 else Help.BeepAlarmMinor();
                 //return;
             }
+            if(dxcName=="system")
+            {	if(msg=="tcp-closed")
+            		EnableButtons();
+            	if(msg=="tcp-opened")
+            		DisableButtons();
+            	return;
+            }
             InvokeLog(dxcName,msg);
         }
 
@@ -267,9 +274,9 @@ InitializeComponent();
         	//if(CurrentDXC!=(null)) CurrentDXC.DXCEvent-= new DXCEventHandler(CurrentDXC_DXCEvent);//отписка от старого dxc
         	CurrentDxc=DxcList.Find(x=>x.CustomName==lbAll.SelectedItem.ToString());
         	ClearLog();
+            CurrentDxc.ReadInfoFromIp();
             Help.BeepClick();
-                CurrentDxc.ReadInfoFromIp();
-                CurrentDxc.ReadAlarms(2);
+            // CurrentDxc.ReadAlarms(2);
         	//CurrentDXC.DXCEvent+= new DXCEventHandler(CurrentDXC_DXCEvent);
         	InvokeLog("",CurrentDxc.ToString());
         	#region test

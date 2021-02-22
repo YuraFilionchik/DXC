@@ -126,6 +126,7 @@ namespace DXC
         	string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
+           // 	MessageBox.Show(text);
 if (string.IsNullOrWhiteSpace(text)) return;
 var lines=text.Split('\n');
 for (int i = 0; i < lines.Length; i++) {
