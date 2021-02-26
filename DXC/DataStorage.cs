@@ -35,7 +35,17 @@ namespace DXC
 		
 		public void SaveAllAlarms()
 		 {
-		     //разделяет все аварии по количеству
+		     //разделяет все аварии по количеству, например по 5000 и сохраняет в отдельные файлы
+		     
+		 }
+		 //разбивает список на несколько подсписков по количеству 
+		 private List<Alarm>[] SplitAlarms(List<Alarm> alarms, int count)
+		 {
+		     
+		 }
+		 //генерация строки названия файла с диапазоном дат записанных аварий и названием dxc 
+		 private string GenerateFileName(List<Alarm> alarms)
+		 {
 		     
 		 }
 		 
