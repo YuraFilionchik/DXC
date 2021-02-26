@@ -74,11 +74,14 @@ namespace DXC
 		/// </summary>
 		/// <param name="alarms">Аварии для сохранения</param>
 		/// <param name="file"></param>
-		private void WriteAlarmsToFile(IEnumerable<Alarm> alarms, string file)
+		private void WriteAlarmsToFile(List<Alarm> alarms, string file)
         {
 
         }
-        
+        private List<Alarm> ReadAlarmsFromFile(string file)
+        {
+            
+        }
        //объединяет аварии, исключая повторы
         private List<Alarm> MergeAlarms(List<Alarm> alarms1, List<Alarm> alarms2)
         {
