@@ -18,6 +18,7 @@ namespace DXC
 	public class DataStorage
 	{
 	    private ClassDxc dxc;
+	    private int CountPerFile;
 	    public string fileDxc{
 	        get{
 	            if(dxc!=null && dxc.Info!=null)
@@ -36,7 +37,11 @@ namespace DXC
 		public void SaveAllAlarms()
 		 {
 		     //разделяет все аварии по количеству, например по 5000 и сохраняет в отдельные файлы
-		     
+		     var lists=SplitAlarms(dxc.Alarms, CountPerFile);
+		     foreach(var list in lists)
+		     {
+		         WriteAlarmsToFile(list,GenerateFileName(list));
+		     }
 		 }
 		 //разбивает список на несколько подсписков по количеству 
 		 private List<Alarm>[] SplitAlarms(List<Alarm> alarms, int count)
@@ -46,6 +51,7 @@ namespace DXC
 		 //генерация строки названия файла с диапазоном дат записанных аварий и названием dxc 
 		 private string GenerateFileName(List<Alarm> alarms)
 		 {
+		    
 		     
 		 }
 		 
