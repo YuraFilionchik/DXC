@@ -33,9 +33,9 @@ namespace DXC
 			
 		}
 		
-		public void SaveAlarms()
+		public void SaveAllAlarms()
 		 {
-		     
+		     //разделяет все аварии по количеству
 		     
 		 }
 		 
@@ -61,6 +61,12 @@ namespace DXC
 		private void WriteAlarmsToFile(IEnumerable<Alarm> alarms, string file)
         {
 
+        }
+        
+       //объединяет аварии, исключая повторы
+        private List<Alarm> MergeAlarms(List<Alarm> alarms1, List<Alarm> alarms2)
+        {
+            
         }
 	}
 	
