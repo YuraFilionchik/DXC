@@ -506,9 +506,9 @@ InitializeComponent();
 					d.LoadFromFile(Cfg);
 					//D.backupPath = Cfg.ReadINI(D.ip, "BackupPath");
 					//D.info.sys_name = Cfg.ReadINI(D.ip, "Sys_Name");
-					string file = Cfg.ReadIni(d.Ip, "Alarms_file");
+					//string file = Cfg.ReadIni(d.Ip, "Alarms_file");
 					//if(Cfg.KeyExists("TimeCorrection",D.ip)) D.info.dt=new TimeSpan(long.Parse(Cfg.ReadINI(D.ip,"TimeCorrection")));
-					if(File.Exists(file))d.ReadAlarmsFromFile(file);
+					d.ReadArhivAlarmsForDays(7);
 					DxcList[i] = d;
 				}
 			}

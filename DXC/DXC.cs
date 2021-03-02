@@ -35,7 +35,8 @@ namespace DXC
         public Dxcinfo Info;
         public List<Port> Ports;
         public event DxcEventHandler DxcEvent;
-		public TFTPSession Session; 
+		public TFTPSession Session;
+        private DataStorage dataStorage;
         public override string ToString()
         {
         	string portsString="";
@@ -63,6 +64,7 @@ namespace DXC
             		MessageBox.Show("Неверный формат IP");
             		return;
             	}
+                dataStorage = new DataStorage(this);
                 Buffer = "";
                 //Cfg=cfg;
                 this.Ip = ip;
@@ -214,11 +216,9 @@ namespace DXC
             cfg.Write(Ip,"name",this.Info.SysName);
             cfg.Write(Ip,"Alarms_file",MainForm.GetAlarmsFilePath(this)); //имя файла с историей аварий DXC
              cfg.Write(Ip,"TimeCorrection",this.Info.Dt.Ticks.ToString());
-             WriteAlarmsToFile(MainForm.GetAlarmsFilePath(this));
-             string file = this.Info.SysName + ".txt";
-            File.WriteAllText(file, this.ToString());
-
-            }
+                dataStorage.SaveAllAlarms();
+                dataStorage.SaveDXCinfo();
+        }
             catch (Exception exception)
             {
                 Log.WriteLog(methodName, exception.Message);
@@ -408,77 +408,16 @@ namespace DXC
         }
         
 
-        
-        /// <summary>
-         /// Запись аварий в файл
-         /// </summary>
-         /// <param name="file"></param>
-         /// <param name="alarms"></param>
-        public void WriteAlarmsToFile(string file)
+        public List<Alarm> ReadAlarmsFromInterval(DateTime from, DateTime to)
         {
-        	try {
-        	//read all records from file
-        	List<Alarm> oldAlarms=new List<Alarm>();
-        	List<string> result=new List<string>();
-        	if(File.Exists(file))
-        	{
-        	var lines=File.ReadAllLines(file);
-        	//read OldAlarms
-        	foreach (string line in lines) {
-        		Alarm a=new Alarm(false);
-        		a.ParseLine(line);
-        		oldAlarms.Add(a);
-        	}
-        	
-        	//поиск и закрытие отработанных аварий, которые в старых списках еще открыты
-        	var mergedAlarms=Program.Helper.MergeAlarms(oldAlarms,Alarms.ToList());
-
-        	File.WriteAllText(file,""); //обнулили файл
-        	List<string> list=new List<string>();
-        	result=mergedAlarms.ConvertAll(x=>x.ExportLineCsv());
-        	
-
-        	}//if file not exist
-        	else {
-        		result=(Alarms as List<Alarm>).ConvertAll(x=>x.ExportLineCsv());
-        	}
-        	File.WriteAllLines(file, result.ToArray());
-}
+           return dataStorage.GetAlarmsFromInterval(from, to);
+        }
+        public List<Alarm> ReadArhivAlarmsForDays(int days)
+        {
+            DateTime now = DateTime.Now;
+            return dataStorage.GetAlarmsFromInterval(new DateTime(now.Ticks - TimeSpan.FromDays(days).Ticks), now);
+        }
         
-        		
-        catch (Exception ex) {
-        		MessageBox.Show(ex.Message,"DXC.Write Alarms to file");
-        }
-        	
-        }
- 
-         /// <summary>
-       /// Чтение списка аварий из ранее сохраненного файла, заменяя уже существующий набор alarms
-       /// </summary>
-       /// <param name="file"></param>
-       /// <returns></returns>
-        public List<Alarm> ReadAlarmsFromFile(string file)
-        {List<Alarm> results=new List<Alarm>();
-        	try {
-        	//	DXCEvent(this.info.sys_name, "Чтение аварий из файла");
-        		if(!File.Exists(file)) {MessageBox.Show("Файл "+file+" не найден"); return results; }
-        		
-        		var lines=File.ReadAllLines(file);
-        		foreach (string line in lines) {
-      			
-        			Alarm alm=new Alarm(false).ParseLine(line);
-        	  
-        			results.Add(alm);
-        		}
-        		//MessageBox.Show("dubles:"+w.ToString());
-        		//DXCEvent(this.info.sys_name, "Загружено "+results.Count+" аварий из "+file);
-        		Alarms=results;
-        		return results;
-        	} catch (Exception ex) {
-        		MessageBox.Show(ex.Message,"Reading alarms from file :"+file);
-        		return results;
-        	}
-        }
         public List<Alarm> GetCorrectedAlarms()
         {
         	return FixAlarmTime(Alarms);
@@ -788,6 +727,12 @@ int np=0;
 				return false;
 
     }
+        /// <summary>
+        /// Разделяет строку input на подстроки по разделителю sep
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="sep">Строка, по которой разбивается исходная</param>
+        /// <returns></returns>
  public static List<string> Split(string input, string sep)
  {
  	List<string> result=new List<string>();
