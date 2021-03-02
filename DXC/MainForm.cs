@@ -54,6 +54,12 @@ namespace DXC
 	    int _remainMilisec;
 	    Color _monitorButtonOffColor=Color.LightBlue;
 	    Color _monitorButtonOnColor=Color.IndianRed;
+        DateTime FromFilter
+        { get 
+            { return new DateTime(dtFrom.Value.Year,dtFrom.Value.Month,dtFrom.Value.Day,0,0,0); } 
+          set { dtFrom.Value = value; } 
+        }
+        DateTime ToFilter { get { return new DateTime(dtTo.Value.Year, dtTo.Value.Month, dtTo.Value.Day,23, 59, 59); } set { dtTo.Value = value; } }
         public MainForm()
 		{
         	 string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
@@ -62,6 +68,8 @@ namespace DXC
 InitializeComponent();
            Cfg = new IniFile(_propertiesFile);
            Program.Helper.Lb1=listBox1;
+           FromFilter = DateTime.Now.AddDays(-7);
+           ToFilter = DateTime.Now;
             ReadSettings();
             ViewDxcNames(DxcList);
             timer1.Interval=_intervalRequests;
@@ -69,14 +77,12 @@ InitializeComponent();
             tbInterval.Text=(_intervalRequests*0.001).ToString();
 			dataGridView1.ScrollBars=ScrollBars.Both;
 			_remainMilisec=_intervalRequests;
-          
 
  #region events
  			listBox1.SelectedValueChanged+= new EventHandler(listBox1_SelectedValueChanged);
            this.Closing += MainForm_Closing;
            this.Shown+=	FormShown;
            this.lbAll.SelectedIndexChanged+= new EventHandler(LbAllSelectedIndexChanged);
-           if(lbAll.Items.Count>0) lbAll.SelectedIndex=0;
             timerProgress.Tick+= new EventHandler(timerProgress_Tick);
             timer1.Tick+= new EventHandler(timer1_Tick);
                 toolStripTextBox1.KeyPress += ToolStripTextBox1_KeyPress;
@@ -84,8 +90,9 @@ InitializeComponent();
             foreach (var dxc in DxcList)
             {
                 dxc.DxcEvent+= new DxcEventHandler(CurrentDXC_DXCEvent);
-                }
+            }
 #endregion
+           if(lbAll.Items.Count>0) lbAll.SelectedIndex=0;
             }
             catch (Exception exception)
             {
@@ -271,30 +278,16 @@ InitializeComponent();
             try
             {
 			if(lbAll.SelectedItems.Count!=1)return;
-        	//if(CurrentDXC!=(null)) CurrentDXC.DXCEvent-= new DXCEventHandler(CurrentDXC_DXCEvent);//отписка от старого dxc
         	CurrentDxc=DxcList.Find(x=>x.CustomName==lbAll.SelectedItem.ToString());
         	ClearLog();
             CurrentDxc.ReadInfoFromIp();
             Help.BeepClick();
-            // CurrentDxc.ReadAlarms(2);
-        	//CurrentDXC.DXCEvent+= new DXCEventHandler(CurrentDXC_DXCEvent);
         	InvokeLog("",CurrentDxc.ToString());
         	#region test
         	//CurrentDXC.alarms=ReadAlarmsFromFile("test_ALARMS.txt");
         	#endregion
-        	//lbAlmCount.Text="Актывных аварий: "+CurrentDXC.alarms.Count(x=>x.active);
         	dataGridView1.Rows.Clear();
-           
-        	if(!checkBox1.Checked)
-        	{
-        				
-        		DisplayAlarmsDgv(CurrentDxc.Alarms);
-        	}
-        	else 
-        	{
-        		
-        		DisplayAlarmsDgv(CurrentDxc.GetCorrectedAlarms());
-        	}
+            ViewDXCAlarmsDGV(CurrentDxc,FromFilter,ToFilter);		
             }
             catch (Exception exception)
             {
@@ -302,16 +295,37 @@ InitializeComponent();
             }
         	
         }
-        
+        public void ViewDXCAlarmsDGV(ClassDxc dxc,DateTime from,DateTime to)
+        {
+            try
+            {
+                if (dxc == null || from == null || to == null) return;
+                var FROM = dxc.CorrectTimeToDXC(from);//приводим к локальному времени на dxc
+                var TO = dxc.CorrectTimeToDXC(to);
+                    IEnumerable<Alarm> Filteredalarms;
+                if (!dxc.Alarms.Any(x => x.Start <= FROM))
+                 //try read from arhiv
+                {
+                    dxc.ReadAlarmsFromInterval(FROM,TO);
+                }
+                if (!checkBox1.Checked)
+                    Filteredalarms = dxc.Alarms.Where(a=>a.Start>=FROM && a.Start<=TO);
+               else Filteredalarms = dxc.GetCorrectedAlarms().Where(a => a.Start >= from && a.Start <= to);
+                DisplayAlarmsDgv(Filteredalarms.ToList());
+            }
+            catch (Exception ex)
+            {
+                Log.WriteLog("ViewAlarms.main.",ex.Message);
+            }
+        }
         public void DisplayAlarmsDgv(List<Alarm> alarms)
         {
  string methodName = new StackTrace(false).GetFrame(0).GetMethod().Name;
             try
             {
-            	//if(dataGridView1.Rows.Count!=0 && 
-            	//   dataGridView1.Rows.Count<alarms.Count)//есть новые аварии
-            	//	HELP.BeepAlarmMajor();
+            	
         	dataGridView1.Rows.Clear();
+                if (alarms.Count == 0) return;
             #region	Manual Add row
             foreach (Alarm alarm in alarms) {
         	
@@ -341,9 +355,10 @@ InitializeComponent();
         		row.DefaultCellStyle=style;
 				dataGridView1.Rows.Add(row);
         	}
-            #endregion
-          
-			
+                #endregion
+
+                FromFilter = alarms.Min(x => x.Start);
+                ToFilter = alarms.Max(x=>x.Start);
         	//if(alarms.Any(x=>x.active)) System.Console.Beep();
         	//Сортировка 
         	dataGridView1.Sort(dataGridView1.Columns[4],System.ComponentModel.ListSortDirection.Descending);
@@ -383,80 +398,8 @@ InitializeComponent();
         }
       
         
-       /// <summary>
-       /// Сохраняет список аварий в существующий файл с объединением или создает новый, если его не существуют
-       /// </summary>
-       /// <param name="file">полное имя файла</param>
-       /// <param name="alarms">список аварий, которые нужно добавить в файл</param>
-        public void WriteAlarmsToFile(string file,IEnumerable<Alarm> alarms)
-        {
-        	try {
-        	//read all records from file
-        	List<Alarm> oldAlarms=new List<Alarm>();
-        	List<string> result=new List<string>();
-        	if(File.Exists(file))
-        	{
-        	var lines=File.ReadAllLines(file);
-        	
-        	foreach (string line in lines) {
-        		Alarm a=new Alarm(false);
-        		a.ParseLine(line);
-        		oldAlarms.Add(a);
-        	}
-        	
-        	//поиск и закрытие отработанных аварий, которые в старых списках еще открыты
-        	var mergedAlarms=Program.Helper.MergeAlarms(oldAlarms,alarms.ToList());
-//        	for (int i = 0; i < oldAlarms.Count(); i++) {
-//        		var A=oldAlarms[i];
-//        		//только активные
-//        	                   if(A.active && alarms.Any(x=>x==A))//new alarms contains old Active alarm
-//        	                  	{ 
-//        	                  		var NewAlm=alarms.First(x=>x==A);
-//        	                  		if( !NewAlm.active) //Закрываем аварию
-//        	                  		{
-//        	                  			A.End=NewAlm.End;
-//        	                  			A.active=false; 
-//        	                  			oldAlarms[i]=A;
-//        	                  		}
-//        	                  	}
-//        	                   
-//        	}
-        	
-//        	foreach (Alarm alarm in alarms) {
-//						if (oldAlarms.All(x => x != alarm))
-//							oldAlarms.Add(alarm);
-//        	}
-        	File.WriteAllText(file,""); //обнулили файл
-        	List<string> list=new List<string>();
-        	result=mergedAlarms.ConvertAll(x=>x.ExportLineCsv());
-        	
-
-        	}//if file not exist
-        	else {
-        		result=(alarms as List<Alarm>).ConvertAll(x=>x.ExportLineCsv());
-        	}
-        	File.WriteAllLines(file, result.ToArray());
-}
+       
         
-        		
-        catch (Exception ex) {
-        		MessageBox.Show(ex.Message,"Write Alarms to file");
-        		Log.WriteLog("WriteAlmsToFile",ex.Message);
-        }
-        	
-        }
-        /// <summary>
-        /// Генерирует имя файла для лога аварий выбранного DXC
-        /// </summary>
-        /// <param name="dxc"></param>
-        /// <returns></returns>
-        public static string GetAlarmsFilePath(ClassDxc dxc)
-        {
-        	if(dxc == null) return "";
-        	if(!String.IsNullOrWhiteSpace(dxc.Info.SysName)) return
-        		dxc.Info.SysName+"-"+dxc.Ip+"-Alarms.txt";
-        	else return "";
-        }
         public void SaveSettings()
         {
         	try {
@@ -508,7 +451,7 @@ InitializeComponent();
 					//D.info.sys_name = Cfg.ReadINI(D.ip, "Sys_Name");
 					//string file = Cfg.ReadIni(d.Ip, "Alarms_file");
 					//if(Cfg.KeyExists("TimeCorrection",D.ip)) D.info.dt=new TimeSpan(long.Parse(Cfg.ReadINI(D.ip,"TimeCorrection")));
-					d.ReadArhivAlarmsForDays(7);
+					d.ReadArhivAlarmsForDays(10);
 					DxcList[i] = d;
 				}
 			}
@@ -527,7 +470,7 @@ InitializeComponent();
 
 
 	    }
-	   static public bool Pformat(string ip)
+	   static public bool IsIPFormat(string ip)
 	    {
 	    	var segments=ip.Split('.');
 	    	if(segments.Length!=4) return false;
@@ -862,6 +805,16 @@ InitializeComponent();
         private void toolStripTextBox1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void dtFrom_ValueChanged(object sender, EventArgs e)
+        {
+            ViewDXCAlarmsDGV(CurrentDxc, FromFilter, ToFilter);
+        }
+
+        private void dtTo_ValueChanged(object sender, EventArgs e)
+        {
+            ViewDXCAlarmsDGV(CurrentDxc, FromFilter, ToFilter);
         }
     }
 }

@@ -59,7 +59,7 @@ namespace DXC
              Session = new TFTPSession();
             try
             {
-            	if(!MainForm.Pformat(ip))
+            	if(!MainForm.IsIPFormat(ip))
             	{
             		MessageBox.Show("Неверный формат IP");
             		return;
@@ -214,7 +214,6 @@ namespace DXC
             if(string.IsNullOrWhiteSpace(this.Info.SysName)) return;
             cfg.Write(Ip,"backup",this.BackupPath);
             cfg.Write(Ip,"name",this.Info.SysName);
-            cfg.Write(Ip,"Alarms_file",MainForm.GetAlarmsFilePath(this)); //имя файла с историей аварий DXC
              cfg.Write(Ip,"TimeCorrection",this.Info.Dt.Ticks.ToString());
                 dataStorage.SaveAllAlarms();
                 dataStorage.SaveDXCinfo();
@@ -410,12 +409,17 @@ namespace DXC
 
         public List<Alarm> ReadAlarmsFromInterval(DateTime from, DateTime to)
         {
-           return dataStorage.GetAlarmsFromInterval(from, to);
+            var arhivedAlarms = dataStorage.GetAlarmsFromInterval(from,to);
+            this.Alarms = dataStorage.MergeAlarms(this.Alarms, arhivedAlarms);
+            return this.Alarms;
         }
         public List<Alarm> ReadArhivAlarmsForDays(int days)
         {
+            //this.Alarms = dataStorage.ReadAlarmsFromFile(this.Info.SysName+"-"+this.Ip+"-"+"Alarms.txt");
             DateTime now = DateTime.Now;
-            return dataStorage.GetAlarmsFromInterval(new DateTime(now.Ticks - TimeSpan.FromDays(days).Ticks), now);
+            var arhivedAlarms = dataStorage.GetAlarmsFromInterval(now.AddDays(-days), now);
+            this.Alarms = dataStorage.MergeAlarms(this.Alarms, arhivedAlarms);
+            return this.Alarms;
         }
         
         public List<Alarm> GetCorrectedAlarms()
@@ -438,6 +442,10 @@ namespace DXC
         		correctedAlarms.Add(alm);
         	}
         	return correctedAlarms;
+        }
+        public DateTime CorrectTimeToDXC(DateTime date)
+        {
+            return date + Info.Dt;
         }
         
         /// <summary>

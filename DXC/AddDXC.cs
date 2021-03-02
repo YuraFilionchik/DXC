@@ -29,7 +29,7 @@ namespace DXC
 		
 		void BtOkClick(object sender, EventArgs e)
 		{
-			if(!MainForm.Pformat(textBox1.Text)) {
+			if(!MainForm.IsIPFormat(textBox1.Text)) {
 				MessageBox.Show("Неверный формат IP адреса");
 				return;
 			}

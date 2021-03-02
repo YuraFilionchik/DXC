@@ -61,7 +61,7 @@ namespace DXC
 		 	groups[0]=new List<Alarm>();
 		 	int c=0;
 		 	foreach (Alarm alarm in alarms) {
-		 		if(groups[c].Count > count) 
+		 		if(groups[c].Count >= count) 
 		 		{
 		 			c++;
 		 			groups[c]=new List<Alarm>();
@@ -82,7 +82,7 @@ namespace DXC
 		 	if(!Directory.Exists(dxc.Info.SysName))Directory.CreateDirectory(dxc.Info.SysName);
 			string flag = alarms.Count==CountPerFile ?"":"~";
 			
-		 	return flag+dxc.Info.SysName+"\\"+dxc.Info.SysName+" Аварии за период="+alarms.Min(x=>x.Start).ToString(DateFormat)+" - "+
+		 	return dxc.Info.SysName+"\\"+flag+dxc.Info.SysName+" Аварии за период="+alarms.Min(x=>x.Start).ToString(DateFormat)+" - "+
 		 		alarms.Max(x=>x.Start).ToString(DateFormat)+".txt";
 		     
 		 }
@@ -159,8 +159,13 @@ foreach (string name in fileNames) {
 
 					//поиск и закрытие отработанных аварий, которые в старых списках еще открыты
 					var mergedAlarms = MergeAlarms(oldAlarms, alarms);
-
-					File.WriteAllText(file, ""); //обнулили файл
+					
+				if(file!=GenerateFileName(mergedAlarms))//после объединения имя должно поменяться
+					{
+						File.Delete(file);
+						file = GenerateFileName(mergedAlarms);
+					}else	
+						File.WriteAllText(file, ""); //обнулили файл
 					result = mergedAlarms.ConvertAll(x => x.ExportLineCsv());
 
 				}//if file not exist
@@ -168,12 +173,7 @@ foreach (string name in fileNames) {
 				{
 					result = alarms.ConvertAll(x => x.ExportLineCsv());
 				}
-				if (result.Count==CountPerFile && file.StartsWith("~"))
-				{	
-					File.Delete(file);
-					file=file.TrimStart('~');
-				}
-				
+								
 				File.WriteAllLines(file, result.ToArray());
 			}
 
@@ -185,7 +185,7 @@ foreach (string name in fileNames) {
 
 		}
 		
-		private List<Alarm> ReadAlarmsFromFile(string file)
+		public List<Alarm> ReadAlarmsFromFile(string file)
         {
 			List<Alarm> results = new List<Alarm>();
 			try
@@ -215,7 +215,7 @@ foreach (string name in fileNames) {
 		/// <param name="list1"></param>
 		/// <param name="list2"></param>
 		/// <returns>ОбЪединенный список аварий</returns>	   
-		private List<Alarm> MergeAlarms(List<Alarm> list1, List<Alarm> list2)
+		public List<Alarm> MergeAlarms(List<Alarm> list1, List<Alarm> list2)
         {
 			try
 			{
