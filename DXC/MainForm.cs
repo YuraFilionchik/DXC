@@ -675,10 +675,11 @@ InitializeComponent();
             else DisplayAlarmsDgv(CurrentDxc.GetCorrectedAlarms());
         }
         
-        
+        //test1
 		void Button4Click(object sender, EventArgs e)
 		{
-			
+			DataStorage ds=new DataStorage(CurrentDxc);
+			ds.SaveAllAlarms();
 		}
         void Button6Click(object sender, EventArgs e)
         {
